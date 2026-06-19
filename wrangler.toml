@@ -4,4 +4,4 @@ pages_build_output_dir = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "egm-of-the-day-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "3bcb18b4-b5df-4f09-ab31-a09469dfd919"
