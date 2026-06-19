@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>EGM of the Day</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink-900:#0a0e14;
+    --ink-800:#10161f;
+    --ink-700:#171f2b;
+    --ink-600:#222c3a;
+    --line:#2a3544;
+    --paper:#e8e6df;
+    --paper-dim:#9aa3b0;
+    --amber:#e8a23d;
+    --amber-dim:#8a6326;
+    --teal:#4fb6a8;
+    --red:#d9685f;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink-900);
+    color:var(--paper);
+    font-family:'JetBrains Mono', monospace;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .scope{
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 24px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 24px);
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:rgba(10,14,20,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 0 rgba(232,162,61,.6);animation:ping 2.2s infinite;}
+  @keyframes ping{
+    0%{box-shadow:0 0 0 0 rgba(232,162,61,.55);}
+    70%{box-shadow:0 0 0 8px rgba(232,162,61,0);}
+    100%{box-shadow:0 0 0 0 rgba(232,162,61,0);}
+  }
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-weight:600; font-size:18px; letter-spacing:0.2px; margin:0;
+  }
+  .brand .tag{font-size:10px; color:var(--paper-dim); letter-spacing:1.5px; text-transform:uppercase;}
+  nav.tabs{display:flex; gap:4px;}
+  nav.tabs button{
+    background:transparent; border:1px solid transparent; color:var(--paper-dim);
+    font-size:11px; letter-spacing:0.5px; text-transform:uppercase; padding:7px 12px; border-radius:7px;
+  }
+  nav.tabs button.active{background:var(--ink-700); color:var(--amber); border-color:var(--line);}
+
+  main{max-width:640px; margin:0 auto; padding:20px 16px 0;}
+
+  .case-meta{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;}
+  .case-meta .eyebrow{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--amber-dim);}
+  .case-meta .date{font-size:11px; color:var(--paper-dim);}
+
+  .scope-card{
+    background:var(--ink-800);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .scope-card img{display:block; width:100%; height:auto; background:#000;}
+  .scope-card .img-empty{
+    aspect-ratio:16/10; display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim); font-size:12px; flex-direction:column; gap:8px;
+  }
+  .scope-card .caption{padding:10px 14px; font-size:11px; color:var(--paper-dim); border-top:1px solid var(--line);}
+
+  .prompt-title{
+    font-family:'Fraunces', serif; font-style:italic; font-weight:500;
+    font-size:20px; line-height:1.4; margin:0 0 16px;
+    color:var(--paper);
+  }
+
+  .guess-grid{display:grid; gap:8px; margin-bottom:18px;}
+  .guess-opt{
+    text-align:left; background:var(--ink-800); border:1px solid var(--line); color:var(--paper);
+    padding:13px 14px; border-radius:8px; font-size:13.5px; display:flex; align-items:center; gap:10px;
+    transition:border-color .15s, background .15s;
+  }
+  .guess-opt:hover{border-color:var(--amber-dim);}
+  .guess-opt .letter{
+    font-size:11px; color:var(--paper-dim); border:1px solid var(--line); border-radius:5px;
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .guess-opt.correct{border-color:var(--teal); background:rgba(79,182,168,0.08);}
+  .guess-opt.correct .letter{border-color:var(--teal); color:var(--teal);}
+  .guess-opt.incorrect{border-color:var(--red); background:rgba(217,104,95,0.07); opacity:0.75;}
+  .guess-opt.incorrect .letter{border-color:var(--red); color:var(--red);}
+  .guess-opt:disabled{cursor:default;}
+
+  .free-text{margin-bottom:18px;}
+  .free-text textarea{
+    width:100%; background:var(--ink-800); border:1px solid var(--line); border-radius:8px; color:var(--paper);
+    font-family:'JetBrains Mono', monospace; font-size:13px; padding:12px; resize:vertical; min-height:70px;
+  }
+  .free-text button{
+    margin-top:8px; background:var(--amber); color:var(--ink-900); border:none; font-weight:700;
+    font-size:12px; letter-spacing:0.5px; text-transform:uppercase; padding:10px 18px; border-radius:7px;
+  }
+
+  .reveal-toggle{
+    width:100%; background:var(--ink-700); border:1px dashed var(--line); color:var(--amber);
+    padding:14px; border-radius:8px; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+    margin-bottom:18px; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .reveal-toggle .chev{transition:transform .2s;}
+  .reveal-toggle.open .chev{transform:rotate(180deg);}
+
+  .interp{
+    border-left:2px solid var(--amber); padding-left:16px; margin-bottom:24px;
+    animation:sweep .5s ease;
+  }
+  @keyframes sweep{from{opacity:0; transform:translateX(-6px);} to{opacity:1; transform:translateX(0);}}
+  .interp h3{
+    font-family:'Fraunces', serif; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;
+    color:var(--amber); margin:0 0 6px;
+  }
+  .interp p{font-size:13.5px; line-height:1.65; color:#d6d4cc; margin:0 0 16px;}
+  .interp .citation{font-size:11px; color:var(--paper-dim); border-top:1px solid var(--line); padding-top:10px;}
+
+  .comments{border-top:1px solid var(--line); padding-top:18px; margin-bottom:30px;}
+  .comments h3{font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--paper-dim); margin:0 0 12px;}
+  .comment{background:var(--ink-800); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:8px;}
+  .comment .who{font-size:11px; color:var(--teal); margin-bottom:4px; display:flex; justify-content:space-between;}
+  .comment .who .when{color:var(--paper-dim);}
+  .comment .body{font-size:13px; line-height:1.5; color:var(--paper);}
+  .comment-form{display:flex; gap:8px; margin-top:10px;}
+  .comment-form input[type=text]{
+    background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper);
+    padding:9px 10px; font-size:12px; font-family:inherit; width:90px; flex-shrink:0;
+  }
+  .comment-form textarea{
+    flex:1; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper);
+    padding:9px 10px; font-size:13px; font-family:inherit; resize:none; min-height:38px;
+  }
+  .comment-form button{
+    background:var(--amber); color:var(--ink-900); border:none; border-radius:7px; padding:0 14px;
+    font-weight:700; font-size:11px; text-transform:uppercase;
+  }
+
+  /* Archive */
+  .archive-grid{display:grid; gap:10px; padding-bottom:30px;}
+  .archive-item{
+    background:var(--ink-800); border:1px solid var(--line); border-radius:9px; padding:13px 14px;
+    display:flex; gap:12px; align-items:center;
+  }
+  .archive-item .thumb{
+    width:54px; height:40px; border-radius:5px; background:#000; flex-shrink:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; border:1px solid var(--line);
+  }
+  .archive-item .thumb img{width:100%; height:100%; object-fit:cover;}
+  .archive-item .meta-col{flex:1; min-width:0;}
+  .archive-item .meta-col .t{font-family:'Fraunces',serif; font-style:italic; font-size:14px; color:var(--paper); margin:0 0 3px;}
+  .archive-item .meta-col .d{font-size:10.5px; color:var(--paper-dim);}
+  .archive-item .arrow{color:var(--paper-dim); font-size:14px;}
+
+  /* Upload (post a case) */
+  .form-block{margin-bottom:18px;}
+  .form-block label{display:block; font-size:11px; letter-spacing:0.8px; text-transform:uppercase; color:var(--paper-dim); margin-bottom:6px;}
+  .form-block input[type=text], .form-block input[type=date], .form-block textarea, .form-block select{
+    width:100%; background:var(--ink-800); border:1px solid var(--line); border-radius:8px; color:var(--paper);
+    padding:11px 12px; font-family:inherit; font-size:13px;
+  }
+  .form-block textarea{resize:vertical; min-height:70px;}
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .opt-row{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
+  .opt-row input[type=text]{flex:1;}
+  .opt-row input[type=radio]{width:18px; height:18px; accent-color:var(--amber);}
+  .add-opt{background:transparent; border:1px dashed var(--line); color:var(--paper-dim); border-radius:7px; padding:8px; font-size:11px; width:100%; margin-bottom:14px;}
+  .upload-zone{
+    border:1px dashed var(--line); border-radius:9px; padding:24px; text-align:center; color:var(--paper-dim);
+    font-size:12px; margin-bottom:6px; cursor:pointer; position:relative;
+  }
+  .upload-zone.has-img{padding:0; border-style:solid;}
+  .upload-zone img{width:100%; border-radius:9px; display:block;}
+  .upload-zone input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .publish-btn{
+    width:100%; background:var(--amber); color:var(--ink-900); border:none; border-radius:9px; padding:14px;
+    font-weight:700; font-size:13px; letter-spacing:0.5px; text-transform:uppercase; margin-top:6px;
+  }
+  .publish-btn:disabled{opacity:0.4;}
+  .hint{font-size:11px; color:var(--paper-dim); line-height:1.5; margin-top:-2px; margin-bottom:14px;}
+
+  .empty-state{text-align:center; padding:60px 20px; color:var(--paper-dim);}
+  .empty-state .big{font-family:'Fraunces',serif; font-style:italic; font-size:18px; color:var(--paper); margin-bottom:8px;}
+  .empty-state .small{font-size:12px; line-height:1.6;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--ink-700); border:1px solid var(--amber-dim); color:var(--amber);
+    padding:10px 18px; border-radius:8px; font-size:12px; z-index:50; opacity:0; transition:opacity .25s;
+  }
+  .toast.show{opacity:1;}
+
+  .name-gate{
+    display:flex; min-height:100vh; align-items:center; justify-content:center; padding:20px;
+  }
+  .name-gate .box{max-width:340px; width:100%; text-align:center;}
+  .name-gate h2{font-family:'Fraunces',serif; font-style:italic; font-size:22px; margin-bottom:8px;}
+  .name-gate p{font-size:12px; color:var(--paper-dim); margin-bottom:18px; line-height:1.6;}
+  .name-gate input{
+    width:100%; background:var(--ink-800); border:1px solid var(--line); border-radius:8px; color:var(--paper);
+    padding:12px; font-size:13px; text-align:center; margin-bottom:10px; font-family:inherit;
+  }
+  .name-gate button{
+    width:100%; background:var(--amber); color:var(--ink-900); border:none; border-radius:8px; padding:12px;
+    font-weight:700; font-size:12px; text-transform:uppercase;
+  }
+
+  ::selection{background:var(--amber-dim);}
+  :focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body class="scope">
+<div id="gate" class="name-gate" style="display:none;">
+  <div class="box">
+    <h2>EGM of the Day</h2>
+    <p>Daily practice, one tracing at a time.<br>What's your name, for comments?</p>
+    <input id="gateName" type="text" placeholder="Your name">
+    <button id="gateBtn">Enter</button>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+<header class="top">
+  <div class="brand">
+    <span class="pulse"></span>
+    <div>
+      <h1>EGM of the Day</h1>
+      <div class="tag">case archive</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button data-tab="today" class="active">Today</button>
+    <button data-tab="archive">Archive</button>
+    <button data-tab="post">Post</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-today"></section>
+  <section id="tab-archive" style="display:none;"></section>
+  <section id="tab-post" style="display:none;"></section>
+</main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  const STORAGE_CASES_KEY = 'egm:cases-index';
+  const STORAGE_PASSCODE_KEY = 'egm:post-passcode';
+  const SHARED = true; // all case + comment data is shared across the group
+  let userName = '';
+  let postPasscode = null; // null = no passcode set yet (open posting)
+  let postUnlocked = false; // unlocked for this session once correct code entered
+  let cases = []; // [{id, date, title, image(base64), options:[{label,correct}], free, interp:{mechanism,evidence,management}, citation, comments:[]}]
+  let currentTab = 'today';
+  let currentCaseId = null;
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  function uid(){ return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+  // ---------- storage shim ----------
+  // Drop-in replacement for Claude's window.storage API, backed by Cloudflare D1
+  // via /api/storage for shared data, and plain localStorage for personal
+  // (non-shared) data like the remembered display name.
+  window.storage = {
+    async get(key, shared){
+      if(!shared){
+        const v = localStorage.getItem('egmlocal:' + key);
+        if(v === null) return null;
+        return { key, value: v, shared: false };
+      }
+      const res = await fetch('/api/storage?key=' + encodeURIComponent(key));
+      if(res.status === 404) return null;
+      if(!res.ok) throw new Error('storage get failed');
+      const data = await res.json();
+      return { key: data.key, value: data.value, shared: true };
+    },
+    async set(key, value, shared){
+      if(!shared){
+        localStorage.setItem('egmlocal:' + key, value);
+        return { key, value, shared: false };
+      }
+      const res = await fetch('/api/storage', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({key, value})
+      });
+      if(!res.ok) return null;
+      const data = await res.json();
+      return { key: data.key, value: data.value, shared: true };
+    },
+    async delete(key, shared){
+      if(!shared){
+        localStorage.removeItem('egmlocal:' + key);
+        return { key, deleted:true, shared:false };
+      }
+      const res = await fetch('/api/storage?key=' + encodeURIComponent(key), { method:'DELETE' });
+      if(!res.ok) return null;
+      return await res.json();
+    },
+    async list(prefix, shared){
+      if(!shared){
+        const keys = Object.keys(localStorage)
+          .filter(k=>k.startsWith('egmlocal:' + (prefix||'')))
+          .map(k=>k.replace('egmlocal:',''));
+        return { keys, prefix, shared:false };
+      }
+      const res = await fetch('/api/storage/list?prefix=' + encodeURIComponent(prefix||''));
+      if(!res.ok) return null;
+      const data = await res.json();
+      return { keys: data.keys, prefix, shared:true };
+    }
+  };
+
+  // ---------- storage ----------
+  async function loadCases(){
+    try{
+      const res = await window.storage.get(STORAGE_CASES_KEY, SHARED);
+      cases = res ? JSON.parse(res.value) : [];
+    }catch(e){
+      cases = [];
+    }
+    cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  }
+  async function saveCases(){
+    try{
+      const r = await window.storage.set(STORAGE_CASES_KEY, JSON.stringify(cases), SHARED);
+      if(!r) toast('Save failed — try again');
+    }catch(e){
+      toast('Save failed — try again');
+    }
+  }
+
+  async function loadPasscode(){
+    try{
+      const res = await window.storage.get(STORAGE_PASSCODE_KEY, SHARED);
+      postPasscode = res ? res.value : null;
+    }catch(e){
+      postPasscode = null;
+    }
+  }
+  async function savePasscode(code){
+    try{
+      const r = await window.storage.set(STORAGE_PASSCODE_KEY, code, SHARED);
+      if(!r) toast('Could not save passcode — try again');
+      else postPasscode = code;
+    }catch(e){
+      toast('Could not save passcode — try again');
+    }
+  }
+
+  function fmtDate(d){
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString(undefined,{month:'short', day:'numeric', year:'numeric'});
+  }
+  function fmtWhen(ts){
+    const dt = new Date(ts);
+    return dt.toLocaleDateString(undefined,{month:'short', day:'numeric'}) + ' · ' + dt.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  }
+
+  // ---------- render: today ----------
+  function pickTodaysCase(){
+    if(cases.length === 0) return null;
+    const today = new Date().toISOString().slice(0,10);
+    let exact = cases.find(c => c.date === today);
+    if(exact) return exact;
+    // most recent past case
+    let past = cases.filter(c => c.date <= today);
+    if(past.length) return past[0];
+    return cases[cases.length-1];
+  }
+
+  function todayStr(){
+    return new Date().toISOString().slice(0,10);
+  }
+  function interpAvailable(c){
+    const i = c.interp || {};
+    const hasContent = !!(i.mechanism || i.evidence || i.management);
+    if(!hasContent) return false;
+    if(!c.interpDate) return true; // no scheduled date means available as soon as written
+    return c.interpDate <= todayStr();
+  }
+
+  function renderToday(){
+    const el = document.getElementById('tab-today');
+    const c = currentCaseId ? cases.find(x=>x.id===currentCaseId) : pickTodaysCase();
+    if(!c){
+      el.innerHTML = `<div class="empty-state">
+        <div class="big">No cases yet</div>
+        <div class="small">Post the first EGM from the "Post" tab —<br>it'll show up here for the group.</div>
+      </div>`;
+      return;
+    }
+    currentCaseId = c.id;
+    const hasOptions = c.options && c.options.length > 0;
+    const answered = c._answeredOption !== undefined;
+    const revealed = !!c._revealed;
+    const available = interpAvailable(c);
+
+    let optionsHtml = '';
+    if(hasOptions){
+      optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
+        let cls = 'guess-opt';
+        if(answered){
+          if(o.correct) cls += ' correct';
+          else if(i === c._answeredOption) cls += ' incorrect';
+        }
+        return `<button class="${cls}" data-idx="${i}" ${answered?'disabled':''}>
+          <span class="letter">${String.fromCharCode(65+i)}</span>${escapeHtml(o.label)}
+        </button>`;
+      }).join('') + `</div>`;
+    }
+
+    let revealBtnHtml;
+    if(available){
+      revealBtnHtml = `<button id="revealBtn" class="reveal-toggle ${revealed?'open':''}">
+        ${revealed ? 'Hide interpretation' : 'Reveal interpretation'} <span class="chev">▾</span>
+      </button>`;
+    } else {
+      const when = c.interpDate ? fmtDate(c.interpDate) : 'soon';
+      revealBtnHtml = `<div class="reveal-toggle" style="opacity:0.5; cursor:default;">
+        Interpretation posts ${when}
+      </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="case-meta">
+        <span class="eyebrow">Case · ${c.id === pickTodaysCase()?.id ? "today's read" : 'archived'}</span>
+        <span class="date">${fmtDate(c.date)}</span>
+      </div>
+      <div class="scope-card">
+        ${c.image ? `<img src="${c.image}" alt="EGM tracing">` : `<div class="img-empty">No image attached</div>`}
+        ${c.caption ? `<div class="caption">${escapeHtml(c.caption)}</div>` : ''}
+      </div>
+      <p class="prompt-title">${escapeHtml(c.title)}</p>
+      ${optionsHtml}
+      ${(!hasOptions) ? `
+        <div class="free-text">
+          <textarea id="freeGuess" placeholder="Your read — mechanism, key findings...">${c._freeGuess||''}</textarea>
+          <button id="freeSubmit">Lock in guess</button>
+        </div>` : ''}
+      ${revealBtnHtml}
+      <div id="interpBlock"></div>
+      <div class="comments">
+        <h3>Discussion (${(c.comments||[]).length})</h3>
+        <div id="commentList"></div>
+        <div class="comment-form">
+          <input type="text" id="cName" value="${escapeHtml(userName)}" placeholder="Name">
+          <textarea id="cBody" placeholder="Add a thought..."></textarea>
+          <button id="cSend">Send</button>
+        </div>
+      </div>
+    `;
+
+    if(hasOptions){
+      el.querySelectorAll('.guess-opt').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          if(c._answeredOption !== undefined) return;
+          c._answeredOption = parseInt(btn.dataset.idx);
+          renderToday();
+        });
+      });
+    } else {
+      const fs = el.querySelector('#freeSubmit');
+      if(fs) fs.addEventListener('click', ()=>{
+        c._freeGuess = el.querySelector('#freeGuess').value;
+        toast('Guess locked in');
+      });
+    }
+
+    renderInterp();
+
+    if(available){
+      el.querySelector('#revealBtn').addEventListener('click', ()=>{
+        c._revealed = !c._revealed;
+        renderToday();
+      });
+    }
+
+    renderComments();
+    el.querySelector('#cSend').addEventListener('click', async ()=>{
+      const nameInput = el.querySelector('#cName').value.trim();
+      const body = el.querySelector('#cBody').value.trim();
+      if(!body) return;
+      userName = nameInput || userName || 'Anonymous';
+      c.comments = c.comments || [];
+      c.comments.push({who:userName, body, ts:Date.now()});
+      el.querySelector('#cBody').value = '';
+      await saveCases();
+      renderToday();
+    });
+
+    function renderInterp(){
+      const block = el.querySelector('#interpBlock');
+      if(!available || !c._revealed){ block.innerHTML=''; return; }
+      const i = c.interp || {};
+      block.innerHTML = `
+        <div class="interp">
+          ${i.mechanism ? `<h3>Mechanism</h3><p>${escapeHtml(i.mechanism)}</p>` : ''}
+          ${i.image ? `<div style="margin:0 0 16px; border:1px solid var(--line); border-radius:8px; overflow:hidden;"><img src="${i.image}" style="display:block; width:100%; height:auto;" alt="Interpretation tracing"></div>` : ''}
+          ${i.evidence ? `<h3>Key evidence on the tracing</h3><p>${escapeHtml(i.evidence)}</p>` : ''}
+          ${i.management ? `<h3>Management pearls</h3><p>${escapeHtml(i.management)}</p>` : ''}
+          ${c.citation ? `<div class="citation">Source / citation: ${escapeHtml(c.citation)}</div>` : ''}
+        </div>
+      `;
+    }
+    function renderComments(){
+      const list = el.querySelector('#commentList');
+      const cm = c.comments || [];
+      if(cm.length===0){ list.innerHTML = `<div class="hint">No comments yet — be the first.</div>`; return; }
+      list.innerHTML = cm.slice().reverse().map(cmt=>`
+        <div class="comment">
+          <div class="who"><span>${escapeHtml(cmt.who)}</span><span class="when">${fmtWhen(cmt.ts)}</span></div>
+          <div class="body">${escapeHtml(cmt.body)}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ---------- render: archive ----------
+  function renderArchive(){
+    const el = document.getElementById('tab-archive');
+    if(cases.length===0){
+      el.innerHTML = `<div class="empty-state"><div class="big">Archive is empty</div><div class="small">Posted cases will appear here, newest first.</div></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="archive-grid">` + cases.map(c=>`
+      <div class="archive-item" data-id="${c.id}">
+        <div class="thumb">${c.image?`<img src="${c.image}">`:''}</div>
+        <div class="meta-col">
+          <p class="t">${escapeHtml(c.title)}</p>
+          <div class="d">${fmtDate(c.date)}${!interpAvailable(c) ? ' · interpretation pending' : ''}</div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+    `).join('') + `</div>`;
+    el.querySelectorAll('.archive-item').forEach(item=>{
+      item.addEventListener('click', ()=>{
+        currentCaseId = item.dataset.id;
+        switchTab('today');
+      });
+    });
+  }
+
+  // ---------- render: post ----------
+  function renderPostLockScreen(mode){
+    const el = document.getElementById('tab-post');
+    if(mode === 'set'){
+      el.innerHTML = `
+        <div class="empty-state" style="padding:40px 16px;">
+          <div class="big">Set a posting passcode</div>
+          <div class="small" style="margin-bottom:18px;">No passcode exists yet. Set one now — anyone with this code will be able to publish cases. Share it only with colleagues you want posting.</div>
+          <input type="text" id="newPasscode" placeholder="Choose a passcode" style="width:100%; background:var(--ink-800); border:1px solid var(--line); border-radius:8px; color:var(--paper); padding:11px 12px; font-family:inherit; font-size:13px; text-align:center; margin-bottom:10px;">
+          <button class="publish-btn" id="setPasscodeBtn">Set passcode</button>
+        </div>
+      `;
+      el.querySelector('#setPasscodeBtn').addEventListener('click', async ()=>{
+        const v = el.querySelector('#newPasscode').value.trim();
+        if(!v){ toast('Enter a passcode first'); return; }
+        await savePasscode(v);
+        postUnlocked = true;
+        toast('Passcode set');
+        renderPost();
+      });
+    } else {
+      el.innerHTML = `
+        <div class="empty-state" style="padding:40px 16px;">
+          <div class="big">Posting is locked</div>
+          <div class="small" style="margin-bottom:18px;">Enter the group's posting passcode to publish a case.</div>
+          <input type="text" id="enterPasscode" placeholder="Passcode" style="width:100%; background:var(--ink-800); border:1px solid var(--line); border-radius:8px; color:var(--paper); padding:11px 12px; font-family:inherit; font-size:13px; text-align:center; margin-bottom:10px;">
+          <button class="publish-btn" id="checkPasscodeBtn">Unlock</button>
+        </div>
+      `;
+      el.querySelector('#checkPasscodeBtn').addEventListener('click', ()=>{
+        const v = el.querySelector('#enterPasscode').value.trim();
+        if(v === postPasscode){
+          postUnlocked = true;
+          toast('Unlocked');
+          renderPost();
+        } else {
+          toast('Wrong passcode');
+        }
+      });
+      el.querySelector('#enterPasscode').addEventListener('keydown', (e)=>{
+        if(e.key==='Enter') el.querySelector('#checkPasscodeBtn').click();
+      });
+    }
+  }
+
+  function renderPost(){
+    if(postPasscode === null){
+      renderPostLockScreen('set');
+      return;
+    }
+    if(!postUnlocked){
+      renderPostLockScreen('enter');
+      return;
+    }
+    const el = document.getElementById('tab-post');
+    const editId = el.dataset.editId || null; // case being edited, if any
+    const editingCase = editId ? cases.find(c=>c.id===editId) : null;
+    const subMode = el.dataset.subMode || 'new'; // 'new' or 'edit'
+
+    const subNav = `
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button id="subNew" class="add-opt" style="flex:1; ${subMode==='new'?'border-color:var(--amber); color:var(--amber);':''}">New case</button>
+        <button id="subEdit" class="add-opt" style="flex:1; ${subMode==='edit'?'border-color:var(--amber); color:var(--amber);':''}">Add / edit interpretation</button>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:18px;">
+        <button id="backupBtn" class="add-opt" style="flex:1; color:var(--teal); border-color:var(--teal);">⬇ Download backup</button>
+        <button id="importBtn" class="add-opt" style="flex:1; color:var(--teal); border-color:var(--teal); position:relative;">
+          ⬆ Import backup
+          <input type="file" id="importFile" accept="application/json,.json" style="position:absolute; inset:0; opacity:0; cursor:pointer;">
+        </button>
+      </div>
+    `;
+
+    if(subMode === 'edit'){
+      renderEditPicker();
+      return;
+    }
+
+    el.innerHTML = subNav + `
+      <div class="form-block">
+        <label>Date</label>
+        <input type="date" id="pDate" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <div class="form-block">
+        <label>EGM tracing</label>
+        <div class="upload-zone" id="dropZone">
+          <span id="dzText">Tap to upload image</span>
+          <input type="file" id="pImage" accept="image/*">
+        </div>
+        <div class="hint">Screenshot or photo of the tracing, ladder diagram, etc.</div>
+      </div>
+      <div class="form-block">
+        <label>Caption (optional)</label>
+        <input type="text" id="pCaption" placeholder="e.g. Intracardiac EGM, RV apex + CS catheter">
+      </div>
+      <div class="form-block">
+        <label>Quiz prompt</label>
+        <textarea id="pTitle" placeholder="e.g. What's the mechanism of this wide-complex tachycardia?"></textarea>
+      </div>
+      <div class="form-block">
+        <label>Answer choices (mark the correct one) — leave blank for free-text response instead</label>
+        <div id="optsWrap"></div>
+        <button class="add-opt" id="addOpt">+ Add choice</button>
+      </div>
+      <div class="form-block">
+        <label>Interpretation release date</label>
+        <input type="date" id="pInterpDate" value="${new Date().toISOString().slice(0,10)}">
+        <div class="hint">Set this to a later date (e.g. tomorrow) if you want the question to post first and the answer to unlock after. You can also leave the interpretation blank now and add it later from "Add / edit interpretation."</div>
+      </div>
+      <div class="form-block">
+        <label>Interpretation — mechanism (optional for now)</label>
+        <textarea id="iMech" placeholder="What's actually going on..."></textarea>
+      </div>
+      <div class="form-block">
+        <label>Interpretation — key evidence on the tracing</label>
+        <textarea id="iEvid" placeholder="What to point at — intervals, dissociation, entrainment..."></textarea>
+      </div>
+      <div class="form-block">
+        <label>Interpretation image (optional)</label>
+        <div class="upload-zone" id="interpDropZone">
+          <span>Tap to upload annotated tracing, ladder diagram, etc.</span>
+          <input type="file" id="pInterpImage" accept="image/*">
+        </div>
+      </div>
+      <div class="form-block">
+        <label>Interpretation — management pearls (optional)</label>
+        <textarea id="iMgmt" placeholder="Clinical takeaway..."></textarea>
+      </div>
+      <div class="form-block">
+        <label>Citation / source (optional)</label>
+        <input type="text" id="pCitation" placeholder="e.g. de-identified case, EP lab 2026; or journal ref">
+      </div>
+      <button class="publish-btn" id="publishBtn">Publish case</button>
+      <button class="add-opt" id="changePasscodeBtn" style="margin-top:10px;">Change posting passcode</button>
+    `;
+
+    el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
+    el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
+    el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
+    el.querySelector('#importFile').addEventListener('change', (e)=>{
+      importBackupFile(e.target.files[0], ()=>renderPost());
+    });
+
+    let optCount = 0;
+    function addOptRow(label='', correct=false){
+      const wrap = el.querySelector('#optsWrap');
+      const row = document.createElement('div');
+      row.className='opt-row';
+      const idx = optCount++;
+      row.innerHTML = `
+        <input type="radio" name="correctOpt" ${correct?'checked':''} value="${idx}">
+        <input type="text" placeholder="Choice ${String.fromCharCode(65+idx)}" value="${escapeHtml(label)}">
+      `;
+      wrap.appendChild(row);
+    }
+    addOptRow(); addOptRow();
+    el.querySelector('#addOpt').addEventListener('click', ()=> addOptRow());
+
+    let imageData = null;
+    const dz = el.querySelector('#dropZone');
+    el.querySelector('#pImage').addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        imageData = reader.result;
+        dz.classList.add('has-img');
+        dz.innerHTML = `<img src="${imageData}"><input type="file" id="pImage" accept="image/*">`;
+        el.querySelector('#pImage').addEventListener('change', arguments.callee);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    let interpImageData = null;
+    const idz = el.querySelector('#interpDropZone');
+    el.querySelector('#pInterpImage').addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        interpImageData = reader.result;
+        idz.classList.add('has-img');
+        idz.innerHTML = `<img src="${interpImageData}"><input type="file" id="pInterpImage" accept="image/*">`;
+        el.querySelector('#pInterpImage').addEventListener('change', arguments.callee);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    el.querySelector('#publishBtn').addEventListener('click', async ()=>{
+      const title = el.querySelector('#pTitle').value.trim();
+      if(!title){ toast('Add a quiz prompt first'); return; }
+      const optionRows = [...el.querySelectorAll('.opt-row')];
+      const correctIdx = el.querySelector('input[name=correctOpt]:checked')?.value;
+      let options = [];
+      optionRows.forEach((row,i)=>{
+        const text = row.querySelector('input[type=text]').value.trim();
+        if(text){
+          options.push({label:text, correct: correctIdx!==undefined && parseInt(correctIdx)===i});
+        }
+      });
+      if(options.length>0 && !options.some(o=>o.correct)){
+        toast('Mark which choice is correct'); return;
+      }
+      const newCase = {
+        id: uid(),
+        date: el.querySelector('#pDate').value,
+        title,
+        image: imageData,
+        caption: el.querySelector('#pCaption').value.trim(),
+        options,
+        interpDate: el.querySelector('#pInterpDate').value,
+        interp:{
+          mechanism: el.querySelector('#iMech').value.trim(),
+          evidence: el.querySelector('#iEvid').value.trim(),
+          management: el.querySelector('#iMgmt').value.trim(),
+          image: interpImageData,
+        },
+        citation: el.querySelector('#pCitation').value.trim(),
+        comments: [],
+      };
+      cases.unshift(newCase);
+      cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
+      await saveCases();
+      toast('Case published');
+      currentCaseId = newCase.id;
+      switchTab('today');
+    });
+
+    el.querySelector('#changePasscodeBtn').addEventListener('click', ()=>{
+      postUnlocked = false;
+      postPasscode = null; // forces the "set new passcode" screen
+      renderPost();
+    });
+
+    function renderEditPicker(){
+      if(cases.length===0){
+        el.innerHTML = subNav + `<div class="hint">No cases exist yet — publish one first.</div>`;
+        el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
+        el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
+        el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
+        el.querySelector('#importFile').addEventListener('change', (e)=>{
+          importBackupFile(e.target.files[0], ()=>renderPost());
+        });
+        return;
+      }
+      el.innerHTML = subNav + `<div class="hint" style="margin-bottom:10px;">Pick a case to add or update its interpretation.</div>` +
+        `<div class="archive-grid">` + cases.map(c=>`
+          <div class="archive-item" data-id="${c.id}">
+            <div class="thumb">${c.image?`<img src="${c.image}">`:''}</div>
+            <div class="meta-col">
+              <p class="t">${escapeHtml(c.title)}</p>
+              <div class="d">${fmtDate(c.date)}${!interpAvailable(c) ? ' · interpretation pending' : ''}</div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+        `).join('') + `</div>`;
+      el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
+      el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
+      el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
+      el.querySelector('#importFile').addEventListener('change', (e)=>{
+        importBackupFile(e.target.files[0], ()=>renderEditPicker());
+      });
+      el.querySelectorAll('.archive-item').forEach(item=>{
+        item.addEventListener('click', ()=>{
+          el.dataset.editId = item.dataset.id;
+          renderEditForm();
+        });
+      });
+    }
+
+    function renderEditForm(){
+      const c = cases.find(x=>x.id===el.dataset.editId);
+      if(!c) return;
+      const i = c.interp || {};
+      el.innerHTML = `
+        <div class="hint" style="margin-bottom:10px;"><strong style="color:var(--paper);">${escapeHtml(c.title)}</strong><br>${fmtDate(c.date)}</div>
+        <div class="form-block">
+          <label>Interpretation release date</label>
+          <input type="date" id="eInterpDate" value="${c.interpDate || c.date}">
+          <div class="hint">Viewers can't reveal the interpretation until this date.</div>
+        </div>
+        <div class="form-block">
+          <label>Interpretation — mechanism</label>
+          <textarea id="eMech">${escapeHtml(i.mechanism||'')}</textarea>
+        </div>
+        <div class="form-block">
+          <label>Interpretation — key evidence on the tracing</label>
+          <textarea id="eEvid">${escapeHtml(i.evidence||'')}</textarea>
+        </div>
+        <div class="form-block">
+          <label>Interpretation image (optional)</label>
+          <div class="upload-zone ${i.image?'has-img':''}" id="eInterpDropZone">
+            ${i.image ? `<img src="${i.image}">` : `<span>Tap to upload annotated tracing, ladder diagram, etc.</span>`}
+            <input type="file" id="eInterpImage" accept="image/*">
+          </div>
+        </div>
+        <div class="form-block">
+          <label>Interpretation — management pearls (optional)</label>
+          <textarea id="eMgmt">${escapeHtml(i.management||'')}</textarea>
+        </div>
+        <div class="form-block">
+          <label>Citation / source (optional)</label>
+          <input type="text" id="eCitation" value="${escapeHtml(c.citation||'')}">
+        </div>
+        <button class="publish-btn" id="saveInterpBtn">Save interpretation</button>
+        <button class="add-opt" id="backToPicker" style="margin-top:10px;">← Back to case list</button>
+      `;
+      let eInterpImageData = i.image || null;
+      const eidz = el.querySelector('#eInterpDropZone');
+      el.querySelector('#eInterpImage').addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          eInterpImageData = reader.result;
+          eidz.classList.add('has-img');
+          eidz.innerHTML = `<img src="${eInterpImageData}"><input type="file" id="eInterpImage" accept="image/*">`;
+          el.querySelector('#eInterpImage').addEventListener('change', arguments.callee);
+        };
+        reader.readAsDataURL(file);
+      });
+      el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
+        c.interpDate = el.querySelector('#eInterpDate').value;
+        c.interp = {
+          mechanism: el.querySelector('#eMech').value.trim(),
+          evidence: el.querySelector('#eEvid').value.trim(),
+          management: el.querySelector('#eMgmt').value.trim(),
+          image: eInterpImageData,
+        };
+        c.citation = el.querySelector('#eCitation').value.trim();
+        await saveCases();
+        toast('Interpretation saved');
+        el.dataset.editId = '';
+        renderPost();
+      });
+      el.querySelector('#backToPicker').addEventListener('click', ()=>{
+        el.dataset.editId = '';
+        renderEditPicker();
+      });
+    }
+  }
+
+  function escapeHtml(s){
+    if(!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function downloadBackup(){
+    try{
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        app: 'EGM of the Day',
+        caseCount: cases.length,
+        cases: cases
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = `egm-backup-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+      toast(`Backup saved — ${cases.length} case${cases.length===1?'':'s'}`);
+    }catch(e){
+      toast('Backup failed — try again');
+    }
+  }
+
+  function importBackupFile(file, onDone){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      try{
+        const parsed = JSON.parse(reader.result);
+        const incoming = Array.isArray(parsed) ? parsed : parsed.cases;
+        if(!Array.isArray(incoming)) throw new Error('No cases array found in file');
+        const existingIds = new Set(cases.map(c=>c.id));
+        let added = 0, skipped = 0;
+        incoming.forEach(c=>{
+          if(c && c.id && !existingIds.has(c.id)){
+            cases.push(c);
+            existingIds.add(c.id);
+            added++;
+          } else {
+            skipped++;
+          }
+        });
+        cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
+        await saveCases();
+        toast(`Imported ${added} case${added===1?'':'s'}${skipped?`, skipped ${skipped} duplicate${skipped===1?'':'s'}`:''}`);
+        if(onDone) onDone();
+      }catch(e){
+        toast('Import failed — not a valid backup file');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function switchTab(tab){
+    currentTab = tab;
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+    document.getElementById('tab-today').style.display = tab==='today' ? 'block':'none';
+    document.getElementById('tab-archive').style.display = tab==='archive' ? 'block':'none';
+    document.getElementById('tab-post').style.display = tab==='post' ? 'block':'none';
+    if(tab==='today') renderToday();
+    if(tab==='archive') renderArchive();
+    if(tab==='post') renderPost();
+  }
+
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.addEventListener('click', ()=> switchTab(b.dataset.tab));
+  });
+
+  // ---------- name gate ----------
+  async function init(){
+    try{
+      const saved = await window.storage.get('egm:username', false);
+      if(saved && saved.value){
+        userName = saved.value;
+      }
+    }catch(e){}
+    await loadCases();
+    await loadPasscode();
+    if(userName){
+      document.getElementById('gate').style.display='none';
+      document.getElementById('app').style.display='block';
+      switchTab('today');
+    } else {
+      document.getElementById('gate').style.display='flex';
+    }
+  }
+
+  document.getElementById('gateBtn').addEventListener('click', async ()=>{
+    const v = document.getElementById('gateName').value.trim();
+    userName = v || 'Anonymous';
+    try{ await window.storage.set('egm:username', userName, false); }catch(e){}
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    switchTab('today');
+  });
+  document.getElementById('gateName').addEventListener('keydown', (e)=>{
+    if(e.key==='Enter') document.getElementById('gateBtn').click();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
