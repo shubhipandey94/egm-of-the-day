@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -446,16 +445,33 @@
  
     let optionsHtml = '';
     if(hasOptions){
+      const votes = c.votes || {};
+      const totalVotes = Object.values(votes).reduce((a,b)=>a+b, 0);
       optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
         let cls = 'guess-opt';
-        if(answered){
+        if(answered && revealed){
           if(o.correct) cls += ' correct';
           else if(i === c._answeredOption) cls += ' incorrect';
         }
-        return `<button class="${cls}" data-idx="${i}" ${answered?'disabled':''}>
-          <span class="letter">${String.fromCharCode(65+i)}</span>${escapeHtml(o.label)}
+        const voteCount = votes[i] || 0;
+        const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+        const showStats = revealed && answered && totalVotes > 0;
+        return `<button class="${cls}" data-idx="${i}" ${answered?'disabled':''} style="position:relative; overflow:hidden;">
+          ${showStats ? `<span style="position:absolute; left:0; top:0; bottom:0; width:${pct}%; background:${o.correct ? 'rgba(79,182,168,0.15)' : 'rgba(255,255,255,0.04)'}; transition:width .6s ease;"></span>` : ''}
+          <span class="letter" style="position:relative;">${String.fromCharCode(65+i)}</span>
+          <span style="position:relative; flex:1;">${escapeHtml(o.label)}</span>
+          ${showStats ? `<span style="position:relative; font-size:11px; color:${o.correct ? 'var(--teal)' : 'var(--paper-dim)'}; margin-left:8px; flex-shrink:0;">${pct}%</span>` : ''}
         </button>`;
       }).join('') + `</div>`;
+      if(answered && totalVotes > 0 && revealed){
+        optionsHtml += `<div style="font-size:11px; color:var(--paper-dim); margin:-10px 0 16px; text-align:right;">${totalVotes} response${totalVotes===1?'':'s'}</div>`;
+      }
+      if(answered && !revealed){
+        const releaseMsg = c.interpDate ? `Interpretation releases ${fmtDate(c.interpDate)}.` : 'Check back when the interpretation is revealed.';
+        optionsHtml += `<div style="font-size:12px; color:var(--teal); margin:-10px 0 16px; display:flex; align-items:center; gap:6px;">
+          <span style="font-size:14px;">✓</span> Answer submitted — ${releaseMsg}
+        </div>`;
+      }
     }
  
     let revealBtnHtml;
@@ -510,9 +526,16 @@
  
     if(hasOptions){
       el.querySelectorAll('.guess-opt').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
+        btn.addEventListener('click', async ()=>{
           if(c._answeredOption !== undefined) return;
-          c._answeredOption = parseInt(btn.dataset.idx);
+          const idx = parseInt(btn.dataset.idx);
+          c._answeredOption = idx;
+          // record vote in shared data
+          c.votes = c.votes || {};
+          c.votes[idx] = (c.votes[idx] || 0) + 1;
+          // if interpretation is already available, reveal immediately
+          if(interpAvailable(c)) c._revealed = true;
+          await saveCases();
           renderToday();
         });
       });
