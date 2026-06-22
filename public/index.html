@@ -552,7 +552,7 @@
       const i = c.interp || {};
       block.innerHTML = `
         <div class="interp">
-          ${(i.text || i.mechanism || i.evidence || i.management) ? `<p>${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n'))}</p>` : ''}
+          ${(i.text || i.mechanism || i.evidence || i.management) ? `<p style="white-space:pre-wrap;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n'))}</p>` : ''}
           ${i.image ? `<div style="margin:0 0 16px; border:1px solid var(--line); border-radius:8px; overflow:hidden;"><img src="${i.image}" style="display:block; width:100%; height:auto;" alt="Interpretation tracing"></div>` : ''}
           ${c.citation ? `<div class="citation">Source / citation: ${escapeHtml(c.citation)}${c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener" style="color:var(--amber);">View reference ↗</a>` : ''}</div>` : (c.link ? `<div class="citation"><a href="${escapeHtml(c.link)}" target="_blank" rel="noopener" style="color:var(--amber);">View reference ↗</a></div>` : '')}
         </div>
