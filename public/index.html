@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,6 +108,8 @@
   .guess-opt.correct .letter{border-color:var(--teal); color:var(--teal);}
   .guess-opt.incorrect{border-color:var(--red); background:rgba(217,104,95,0.07); opacity:0.75;}
   .guess-opt.incorrect .letter{border-color:var(--red); color:var(--red);}
+  .guess-opt.pending{border-color:var(--amber); background:rgba(232,162,61,0.08);}
+  .guess-opt.pending .letter{border-color:var(--amber); color:var(--amber);}
   .guess-opt:disabled{cursor:default;}
  
   .free-text{margin-bottom:18px;}
@@ -413,9 +416,11 @@
   }
   function interpAvailable(c){
     const i = c.interp || {};
-    const hasContent = !!(i.text || i.mechanism || i.evidence || i.management); // legacy fields supported
+    const hasContent = !!(i.text || i.mechanism || i.evidence || i.management);
     if(!hasContent) return false;
     if(!c.interpDate) return true;
+    // if interpDate is same as or before the posting date, treat as immediately available
+    if(c.interpDate <= c.date) return true;
     return c.interpDate <= todayStr();
   }
  
@@ -447,11 +452,16 @@
     if(hasOptions){
       const votes = c.votes || {};
       const totalVotes = Object.values(votes).reduce((a,b)=>a+b, 0);
+      const pending = c._pendingOption;
       optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
         let cls = 'guess-opt';
         if(answered && revealed){
           if(o.correct) cls += ' correct';
           else if(i === c._answeredOption) cls += ' incorrect';
+        } else if(!answered && pending === i){
+          cls += ' pending';
+        } else if(answered && !revealed && i === c._answeredOption){
+          cls += ' pending'; // keep submitted choice highlighted until reveal
         }
         const voteCount = votes[i] || 0;
         const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
@@ -463,6 +473,9 @@
           ${showStats ? `<span style="position:relative; font-size:11px; color:${o.correct ? 'var(--teal)' : 'var(--paper-dim)'}; margin-left:8px; flex-shrink:0;">${pct}%</span>` : ''}
         </button>`;
       }).join('') + `</div>`;
+      if(!answered && pending !== undefined){
+        optionsHtml += `<button id="submitAnswer" class="publish-btn" style="width:100%; margin-bottom:16px;">Submit answer</button>`;
+      }
       if(answered && totalVotes > 0 && revealed){
         optionsHtml += `<div style="font-size:11px; color:var(--paper-dim); margin:-10px 0 16px; text-align:right;">${totalVotes} response${totalVotes===1?'':'s'}</div>`;
       }
@@ -526,19 +539,31 @@
  
     if(hasOptions){
       el.querySelectorAll('.guess-opt').forEach(btn=>{
-        btn.addEventListener('click', async ()=>{
+        btn.addEventListener('click', ()=>{
           if(c._answeredOption !== undefined) return;
-          const idx = parseInt(btn.dataset.idx);
-          c._answeredOption = idx;
-          // record vote in shared data
-          c.votes = c.votes || {};
-          c.votes[idx] = (c.votes[idx] || 0) + 1;
-          // if interpretation is already available, reveal immediately
-          if(interpAvailable(c)) c._revealed = true;
-          await saveCases();
+          c._pendingOption = parseInt(btn.dataset.idx);
           renderToday();
         });
       });
+      const submitBtn = el.querySelector('#submitAnswer');
+      if(submitBtn){
+        submitBtn.addEventListener('click', async ()=>{
+          if(c._answeredOption !== undefined || c._pendingOption === undefined) return;
+          const idx = c._pendingOption;
+          c._answeredOption = idx;
+          delete c._pendingOption;
+          if(!isPreviewing){
+            // only record real votes outside preview mode
+            c.votes = c.votes || {};
+            c.votes[idx] = (c.votes[idx] || 0) + 1;
+            if(interpAvailable(c)) c._revealed = true;
+            await saveCases();
+          } else {
+            if(interpAvailable(c)) c._revealed = true;
+          }
+          renderToday();
+        });
+      }
     } else {
       const fs = el.querySelector('#freeSubmit');
       if(fs) fs.addEventListener('click', ()=>{
@@ -911,6 +936,13 @@
       });
       existing.querySelectorAll('.draft-preview').forEach(btn=>{
         btn.addEventListener('click', ()=>{
+          const previewCase = cases.find(x=>x.id===btn.dataset.id);
+          if(previewCase){
+            // reset answer state so preview always starts fresh
+            delete previewCase._answeredOption;
+            delete previewCase._pendingOption;
+            delete previewCase._revealed;
+          }
           previewDraftId = btn.dataset.id;
           currentCaseId = btn.dataset.id;
           switchTab('today');
