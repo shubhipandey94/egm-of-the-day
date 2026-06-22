@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -279,6 +280,7 @@
   let userName = '';
   let postPasscode = null; // null = no passcode set yet (open posting)
   let postUnlocked = false; // unlocked for this session once correct code entered
+  let previewDraftId = null; // set when previewing a draft from the Post tab
   let cases = []; // [{id, date, title, image(base64), options:[{label,correct}], free, interp:{mechanism,evidence,management}, citation, comments:[]}]
   let currentTab = 'today';
   let currentCaseId = null;
@@ -420,8 +422,9 @@
  
   function renderToday(){
     const el = document.getElementById('tab-today');
+    const isPreviewing = previewDraftId !== null;
     const c = currentCaseId ? cases.find(x=>x.id===currentCaseId) : pickTodaysCase();
-    if(!c){
+    if(!c || (!isLive(c) && !isPreviewing)){
       el.innerHTML = `<div class="empty-state">
         <div class="big">No cases yet</div>
         <div class="small">Post the first EGM from the "Post" tab —<br>it'll show up here for the group.</div>
@@ -433,6 +436,13 @@
     const answered = c._answeredOption !== undefined;
     const revealed = !!c._revealed;
     const available = interpAvailable(c);
+ 
+    const previewBanner = isPreviewing ? `
+      <div style="background:var(--amber-dim); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:var(--amber);">Preview mode — not visible to viewers</span>
+        <button id="exitPreview" style="background:transparent; border:1px solid var(--amber-dim); color:var(--amber); font-size:11px; padding:5px 10px; border-radius:6px; cursor:pointer;">← Back to drafts</button>
+      </div>
+    ` : '';
  
     let optionsHtml = '';
     if(hasOptions){
@@ -461,8 +471,9 @@
     }
  
     el.innerHTML = `
+      ${previewBanner}
       <div class="case-meta">
-        <span class="eyebrow">Case · ${c.id === pickTodaysCase()?.id ? "today's read" : 'archived'}</span>
+        <span class="eyebrow">Case · ${isPreviewing ? 'draft preview' : c.id === pickTodaysCase()?.id ? "today's read" : 'archived'}</span>
         <span class="date">${fmtDate(c.date)}</span>
       </div>
       <div class="scope-card">
@@ -488,6 +499,14 @@
         </div>
       </div>
     `;
+ 
+    if(isPreviewing){
+      el.querySelector('#exitPreview').addEventListener('click', ()=>{
+        previewDraftId = null;
+        currentCaseId = null;
+        switchTab('post');
+      });
+    }
  
     if(hasOptions){
       el.querySelectorAll('.guess-opt').forEach(btn=>{
@@ -845,8 +864,9 @@
                     <div class="d">Scheduled: ${fmtDate(c.date)}</div>
                   </div>
                 </div>
-                <div style="display:flex; gap:8px; width:100%;">
+                <div style="display:flex; gap:8px; width:100%; flex-wrap:wrap;">
                   <button class="publish-btn draft-go-live" data-id="${c.id}" style="flex:1; padding:10px; font-size:11px;">Go live</button>
+                  <button class="add-opt draft-preview" data-id="${c.id}" style="flex:1;">Preview</button>
                   <button class="add-opt draft-edit" data-id="${c.id}" style="flex:1;">Edit</button>
                   <button class="add-opt draft-delete" data-id="${c.id}" style="flex:1; color:var(--red); border-color:var(--red);">Delete</button>
                 </div>
@@ -863,6 +883,13 @@
           await saveCases();
           toast('Case is now live');
           currentCaseId = c.id;
+          switchTab('today');
+        });
+      });
+      existing.querySelectorAll('.draft-preview').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          previewDraftId = btn.dataset.id;
+          currentCaseId = btn.dataset.id;
           switchTab('today');
         });
       });
@@ -1039,15 +1066,20 @@
         });
         return;
       }
-      el.innerHTML = subNav + `<div class="hint" style="margin-bottom:10px;">Pick a case to add or update its interpretation.</div>` +
+      el.innerHTML = subNav + `<div class="hint" style="margin-bottom:10px;">Pick a case to edit its interpretation, or unpublish a live case.</div>` +
         `<div class="archive-grid">` + cases.map(c=>`
-          <div class="archive-item" data-id="${c.id}">
-            <div class="thumb">${c.image?`<img src="${c.image}">`:''}</div>
-            <div class="meta-col">
-              <p class="t">${escapeHtml(c.title)}</p>
-              <div class="d">${fmtDate(c.date)}${c.status==='draft' ? ' · <span style="color:var(--amber)">draft</span>' : ''}${!interpAvailable(c) && isLive(c) ? ' · interpretation pending' : ''}</div>
+          <div class="archive-item" style="flex-direction:column; align-items:flex-start; gap:8px;" data-id="${c.id}">
+            <div style="display:flex; gap:12px; align-items:center; width:100%;">
+              <div class="thumb">${c.image?`<img src="${c.image}">`:''}</div>
+              <div class="meta-col">
+                <p class="t">${escapeHtml(c.title)}</p>
+                <div class="d">${fmtDate(c.date)}${c.status==='draft' ? ' · <span style="color:var(--amber)">draft</span>' : ''}${!interpAvailable(c) && isLive(c) ? ' · interpretation pending' : ''}</div>
+              </div>
             </div>
-            <div class="arrow">→</div>
+            <div style="display:flex; gap:8px; width:100%;">
+              <button class="add-opt edit-interp-btn" data-id="${c.id}" style="flex:1;">Edit interpretation</button>
+              ${isLive(c) ? `<button class="add-opt unpublish-btn" data-id="${c.id}" style="flex:1; color:var(--red); border-color:var(--red);">Unpublish</button>` : ''}
+            </div>
           </div>
         `).join('') + `</div>`;
       el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
@@ -1056,10 +1088,21 @@
       el.querySelector('#importFile').addEventListener('change', (e)=>{
         importBackupFile(e.target.files[0], ()=>renderEditPicker());
       });
-      el.querySelectorAll('.archive-item').forEach(item=>{
-        item.addEventListener('click', ()=>{
-          el.dataset.editId = item.dataset.id;
+      el.querySelectorAll('.edit-interp-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          el.dataset.editId = btn.dataset.id;
           renderEditForm();
+        });
+      });
+      el.querySelectorAll('.unpublish-btn').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          if(!confirm('Unpublish this case? It will become a draft and disappear from viewers until you go live again.')) return;
+          const c = cases.find(x=>x.id===btn.dataset.id);
+          if(!c) return;
+          c.status = 'draft';
+          await saveCases();
+          toast('Case unpublished — moved to drafts');
+          renderEditPicker();
         });
       });
     }
@@ -1240,6 +1283,8 @@
  
   function switchTab(tab){
     currentTab = tab;
+    // clear preview state when user manually navigates away from Today
+    if(tab !== 'today') previewDraftId = null;
     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
     document.getElementById('tab-today').style.display = tab==='today' ? 'block':'none';
     document.getElementById('tab-archive').style.display = tab==='archive' ? 'block':'none';
