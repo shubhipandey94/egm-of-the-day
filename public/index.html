@@ -479,7 +479,7 @@
       if(answered && totalVotes > 0 && revealed){
         optionsHtml += `<div style="font-size:11px; color:var(--paper-dim); margin:-10px 0 16px; text-align:right;">${totalVotes} response${totalVotes===1?'':'s'}</div>`;
       }
-      if(answered && !revealed){
+      if(answered && !revealed && !available){
         const releaseMsg = c.interpDate ? `Interpretation releases ${fmtDate(c.interpDate)}.` : 'Check back when the interpretation is revealed.';
         optionsHtml += `<div style="font-size:12px; color:var(--teal); margin:-10px 0 16px; display:flex; align-items:center; gap:6px;">
           <span style="font-size:14px;">✓</span> Answer submitted — ${releaseMsg}
