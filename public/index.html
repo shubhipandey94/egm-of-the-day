@@ -455,12 +455,12 @@
       const pending = c._pendingOption;
       optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
         let cls = 'guess-opt';
-        if(answered && revealed){
+        if(answered && (revealed || available)){
           if(o.correct) cls += ' correct';
           else if(i === c._answeredOption) cls += ' incorrect';
         } else if(!answered && pending === i){
           cls += ' pending';
-        } else if(answered && !revealed && i === c._answeredOption){
+        } else if(answered && !revealed && !available && i === c._answeredOption){
           cls += ' pending'; // keep submitted choice highlighted until reveal
         }
         const voteCount = votes[i] || 0;
