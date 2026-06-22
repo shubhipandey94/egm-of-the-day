@@ -741,32 +741,24 @@
  
     let imageData = null;
     const dz = el.querySelector('#dropZone');
-    el.querySelector('#pImage').addEventListener('change', (e)=>{
+    el.querySelector('#pImage').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
-      const reader = new FileReader();
-      reader.onload = async ()=>{
-        imageData = await convertToJpeg(reader.result);
-        dz.classList.add('has-img');
-        dz.innerHTML = `<img src="${imageData}"><input type="file" id="pImage" accept="image/*">`;
-        el.querySelector('#pImage').addEventListener('change', arguments.callee);
-      };
-      reader.readAsDataURL(file);
+      imageData = await convertToJpeg(file);
+      dz.classList.add('has-img');
+      dz.innerHTML = `<img src="${imageData}"><input type="file" id="pImage" accept="image/*">`;
+      el.querySelector('#pImage').addEventListener('change', arguments.callee);
     });
  
     let interpImageData = null;
     const idz = el.querySelector('#interpDropZone');
-    el.querySelector('#pInterpImage').addEventListener('change', (e)=>{
+    el.querySelector('#pInterpImage').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
-      const reader = new FileReader();
-      reader.onload = async ()=>{
-        interpImageData = await convertToJpeg(reader.result);
-        idz.classList.add('has-img');
-        idz.innerHTML = `<img src="${interpImageData}"><input type="file" id="pInterpImage" accept="image/*">`;
-        el.querySelector('#pInterpImage').addEventListener('change', arguments.callee);
-      };
-      reader.readAsDataURL(file);
+      interpImageData = await convertToJpeg(file);
+      idz.classList.add('has-img');
+      idz.innerHTML = `<img src="${interpImageData}"><input type="file" id="pInterpImage" accept="image/*">`;
+      el.querySelector('#pInterpImage').addEventListener('change', arguments.callee);
     });
  
     function buildCaseFromForm(status){
@@ -976,30 +968,22 @@
       // image uploads
       let dImageData = c.image || null;
       const ddz = ds.querySelector('#dDropZone');
-      ds.querySelector('#dImage').addEventListener('change', (e)=>{
+      ds.querySelector('#dImage').addEventListener('change', async (e)=>{
         const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async ()=>{
-          dImageData = await convertToJpeg(reader.result);
-          ddz.classList.add('has-img');
-          ddz.innerHTML = `<img src="${dImageData}"><input type="file" id="dImage" accept="image/*">`;
-          ds.querySelector('#dImage').addEventListener('change', arguments.callee);
-        };
-        reader.readAsDataURL(file);
+        dImageData = await convertToJpeg(file);
+        ddz.classList.add('has-img');
+        ddz.innerHTML = `<img src="${dImageData}"><input type="file" id="dImage" accept="image/*">`;
+        ds.querySelector('#dImage').addEventListener('change', arguments.callee);
       });
  
       let dInterpImageData = i.image || null;
       const didz = ds.querySelector('#dInterpDropZone');
-      ds.querySelector('#dInterpImage').addEventListener('change', (e)=>{
+      ds.querySelector('#dInterpImage').addEventListener('change', async (e)=>{
         const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async ()=>{
-          dInterpImageData = await convertToJpeg(reader.result);
-          didz.classList.add('has-img');
-          didz.innerHTML = `<img src="${dInterpImageData}"><input type="file" id="dInterpImage" accept="image/*">`;
-          ds.querySelector('#dInterpImage').addEventListener('change', arguments.callee);
-        };
-        reader.readAsDataURL(file);
+        dInterpImageData = await convertToJpeg(file);
+        didz.classList.add('has-img');
+        didz.innerHTML = `<img src="${dInterpImageData}"><input type="file" id="dInterpImage" accept="image/*">`;
+        ds.querySelector('#dInterpImage').addEventListener('change', arguments.callee);
       });
  
       function collectDraftEdits(status){
@@ -1130,17 +1114,13 @@
       `;
       let eInterpImageData = i.image || null;
       const eidz = el.querySelector('#eInterpDropZone');
-      el.querySelector('#eInterpImage').addEventListener('change', (e)=>{
+      el.querySelector('#eInterpImage').addEventListener('change', async (e)=>{
         const file = e.target.files[0];
         if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async ()=>{
-          eInterpImageData = await convertToJpeg(reader.result);
-          eidz.classList.add('has-img');
-          eidz.innerHTML = `<img src="${eInterpImageData}"><input type="file" id="eInterpImage" accept="image/*">`;
-          el.querySelector('#eInterpImage').addEventListener('change', arguments.callee);
-        };
-        reader.readAsDataURL(file);
+        eInterpImageData = await convertToJpeg(file);
+        eidz.classList.add('has-img');
+        eidz.innerHTML = `<img src="${eInterpImageData}"><input type="file" id="eInterpImage" accept="image/*">`;
+        el.querySelector('#eInterpImage').addEventListener('change', arguments.callee);
       });
       el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
         c.interpDate = el.querySelector('#eInterpDate').value;
@@ -1168,21 +1148,55 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
  
-  function convertToJpeg(dataUrl){
+  function convertToJpeg(file){
     return new Promise((resolve)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg', 0.92));
+      // Detect HEIC by MIME type or file extension
+      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
+                     file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+ 
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const dataUrl = reader.result;
+        // Try canvas conversion via blob URL (most reliable cross-browser path)
+        const byteStr = atob(dataUrl.split(',')[1]);
+        const ab = new ArrayBuffer(byteStr.length);
+        const ia = new Uint8Array(ab);
+        for(let i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+        const blob = new Blob([ab], {type: file.type || 'image/jpeg'});
+        const blobUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = ()=>{
+          try{
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            if(canvas.width === 0 || canvas.height === 0){
+              URL.revokeObjectURL(blobUrl);
+              if(isHeic) toast('⚠ HEIC detected — please export as JPEG from Photos first');
+              resolve(dataUrl);
+              return;
+            }
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.drawImage(img,0,0);
+            const jpeg = canvas.toDataURL('image/jpeg', 0.92);
+            URL.revokeObjectURL(blobUrl);
+            resolve(jpeg.length > 5000 ? jpeg : dataUrl);
+          }catch(e){
+            URL.revokeObjectURL(blobUrl);
+            if(isHeic) toast('⚠ HEIC detected — please export as JPEG from Photos first');
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = ()=>{
+          URL.revokeObjectURL(blobUrl);
+          if(isHeic) toast('⚠ HEIC image could not be converted — export as JPEG from Photos first');
+          resolve(dataUrl);
+        };
+        img.src = blobUrl;
       };
-      img.onerror = ()=> resolve(dataUrl); // fallback: use original if conversion fails
-      img.src = dataUrl;
+      reader.readAsDataURL(file);
     });
   }
  
