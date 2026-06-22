@@ -488,15 +488,20 @@
     }
  
     let revealBtnHtml;
-    if(available){
-      revealBtnHtml = `<button id="revealBtn" class="reveal-toggle ${revealed?'open':''}">
-        ${revealed ? 'Hide interpretation' : 'Reveal interpretation'} <span class="chev">▾</span>
-      </button>`;
+    if(!hasOptions || answered){
+      // only show reveal button after answer submitted (or if no options at all)
+      if(available){
+        revealBtnHtml = `<button id="revealBtn" class="reveal-toggle ${revealed?'open':''}">
+          ${revealed ? 'Hide interpretation' : 'Reveal interpretation'} <span class="chev">▾</span>
+        </button>`;
+      } else {
+        const when = c.interpDate ? fmtDate(c.interpDate) : 'soon';
+        revealBtnHtml = `<div class="reveal-toggle" style="opacity:0.5; cursor:default;">
+          Interpretation posts ${when}
+        </div>`;
+      }
     } else {
-      const when = c.interpDate ? fmtDate(c.interpDate) : 'soon';
-      revealBtnHtml = `<div class="reveal-toggle" style="opacity:0.5; cursor:default;">
-        Interpretation posts ${when}
-      </div>`;
+      revealBtnHtml = ''; // hidden until answer submitted
     }
  
     el.innerHTML = `
