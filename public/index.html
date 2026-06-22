@@ -412,9 +412,9 @@
   }
   function interpAvailable(c){
     const i = c.interp || {};
-    const hasContent = !!(i.mechanism || i.evidence || i.management);
+    const hasContent = !!(i.text || i.mechanism || i.evidence || i.management); // legacy fields supported
     if(!hasContent) return false;
-    if(!c.interpDate) return true; // no scheduled date means available as soon as written
+    if(!c.interpDate) return true;
     return c.interpDate <= todayStr();
   }
  
@@ -533,11 +533,9 @@
       const i = c.interp || {};
       block.innerHTML = `
         <div class="interp">
-          ${i.mechanism ? `<h3>Mechanism</h3><p>${escapeHtml(i.mechanism)}</p>` : ''}
+          ${(i.text || i.mechanism || i.evidence || i.management) ? `<p>${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n'))}</p>` : ''}
           ${i.image ? `<div style="margin:0 0 16px; border:1px solid var(--line); border-radius:8px; overflow:hidden;"><img src="${i.image}" style="display:block; width:100%; height:auto;" alt="Interpretation tracing"></div>` : ''}
-          ${i.evidence ? `<h3>Key evidence on the tracing</h3><p>${escapeHtml(i.evidence)}</p>` : ''}
-          ${i.management ? `<h3>Management pearls</h3><p>${escapeHtml(i.management)}</p>` : ''}
-          ${c.citation ? `<div class="citation">Source / citation: ${escapeHtml(c.citation)}</div>` : ''}
+          ${c.citation ? `<div class="citation">Source / citation: ${escapeHtml(c.citation)}${c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener" style="color:var(--amber);">View reference ↗</a>` : ''}</div>` : (c.link ? `<div class="citation"><a href="${escapeHtml(c.link)}" target="_blank" rel="noopener" style="color:var(--amber);">View reference ↗</a></div>` : '')}
         </div>
       `;
     }
@@ -690,12 +688,8 @@
         <div class="hint">Set this to a later date (e.g. tomorrow) if you want the question to post first and the answer to unlock after. You can also leave the interpretation blank now and add it later from "Add / edit interpretation."</div>
       </div>
       <div class="form-block">
-        <label>Interpretation — mechanism (optional for now)</label>
-        <textarea id="iMech" placeholder="What's actually going on..."></textarea>
-      </div>
-      <div class="form-block">
-        <label>Interpretation — key evidence on the tracing</label>
-        <textarea id="iEvid" placeholder="What to point at — intervals, dissociation, entrainment..."></textarea>
+        <label>Interpretation (optional)</label>
+        <textarea id="iText" placeholder="Describe the tracing in your own words..." style="min-height:120px;"></textarea>
       </div>
       <div class="form-block">
         <label>Interpretation image (optional)</label>
@@ -705,12 +699,12 @@
         </div>
       </div>
       <div class="form-block">
-        <label>Interpretation — management pearls (optional)</label>
-        <textarea id="iMgmt" placeholder="Clinical takeaway..."></textarea>
-      </div>
-      <div class="form-block">
         <label>Citation / source (optional)</label>
         <input type="text" id="pCitation" placeholder="e.g. de-identified case, EP lab 2026; or journal ref">
+      </div>
+      <div class="form-block">
+        <label>Reference link (optional)</label>
+        <input type="text" id="pLink" placeholder="https://...">
       </div>
       <button class="publish-btn" id="publishBtn">Publish case</button>
       <button class="add-opt" id="saveDraftBtn" style="margin-top:8px; width:100%;">Save as draft</button>
@@ -785,12 +779,11 @@
         options,
         interpDate: el.querySelector('#pInterpDate').value,
         interp:{
-          mechanism: el.querySelector('#iMech').value.trim(),
-          evidence: el.querySelector('#iEvid').value.trim(),
-          management: el.querySelector('#iMgmt').value.trim(),
+          text: el.querySelector('#iText').value.trim(),
           image: interpImageData,
         },
         citation: el.querySelector('#pCitation').value.trim(),
+        link: el.querySelector('#pLink').value.trim(),
         comments: [],
         status,
       };
@@ -922,11 +915,8 @@
           <div class="form-block"><label>Interpretation release date</label>
             <input type="date" id="dInterpDate" value="${c.interpDate||c.date}">
           </div>
-          <div class="form-block"><label>Interpretation — mechanism (optional)</label>
-            <textarea id="dMech">${escapeHtml(i.mechanism||'')}</textarea>
-          </div>
-          <div class="form-block"><label>Interpretation — key evidence</label>
-            <textarea id="dEvid">${escapeHtml(i.evidence||'')}</textarea>
+          <div class="form-block"><label>Interpretation (optional)</label>
+            <textarea id="dText" style="min-height:120px;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n') || '')}</textarea>
           </div>
           <div class="form-block"><label>Interpretation image (optional)</label>
             <div class="upload-zone ${i.image?'has-img':''}" id="dInterpDropZone">
@@ -934,11 +924,11 @@
               <input type="file" id="dInterpImage" accept="image/*">
             </div>
           </div>
-          <div class="form-block"><label>Interpretation — management pearls (optional)</label>
-            <textarea id="dMgmt">${escapeHtml(i.management||'')}</textarea>
-          </div>
           <div class="form-block"><label>Citation / source (optional)</label>
             <input type="text" id="dCitation" value="${escapeHtml(c.citation||'')}">
+          </div>
+          <div class="form-block"><label>Reference link (optional)</label>
+            <input type="text" id="dLink" value="${escapeHtml(c.link||'')}" placeholder="https://...">
           </div>
           <button class="publish-btn" id="dSaveDraft">Save draft</button>
           <button class="publish-btn" id="dGoLive" style="margin-top:8px; background:var(--teal); color:var(--ink-900);">Save &amp; go live</button>
@@ -1005,12 +995,11 @@
           options,
           interpDate: ds.querySelector('#dInterpDate').value,
           interp:{
-            mechanism: ds.querySelector('#dMech').value.trim(),
-            evidence: ds.querySelector('#dEvid').value.trim(),
-            management: ds.querySelector('#dMgmt').value.trim(),
+            text: ds.querySelector('#dText').value.trim(),
             image: dInterpImageData,
           },
           citation: ds.querySelector('#dCitation').value.trim(),
+          link: ds.querySelector('#dLink').value.trim(),
           status,
         };
       }
@@ -1087,12 +1076,8 @@
           <div class="hint">Viewers can't reveal the interpretation until this date.</div>
         </div>
         <div class="form-block">
-          <label>Interpretation — mechanism</label>
-          <textarea id="eMech">${escapeHtml(i.mechanism||'')}</textarea>
-        </div>
-        <div class="form-block">
-          <label>Interpretation — key evidence on the tracing</label>
-          <textarea id="eEvid">${escapeHtml(i.evidence||'')}</textarea>
+          <label>Interpretation (optional)</label>
+          <textarea id="eText" style="min-height:120px;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n') || '')}</textarea>
         </div>
         <div class="form-block">
           <label>Interpretation image (optional)</label>
@@ -1102,12 +1087,12 @@
           </div>
         </div>
         <div class="form-block">
-          <label>Interpretation — management pearls (optional)</label>
-          <textarea id="eMgmt">${escapeHtml(i.management||'')}</textarea>
-        </div>
-        <div class="form-block">
           <label>Citation / source (optional)</label>
           <input type="text" id="eCitation" value="${escapeHtml(c.citation||'')}">
+        </div>
+        <div class="form-block">
+          <label>Reference link (optional)</label>
+          <input type="text" id="eLink" value="${escapeHtml(c.link||'')}" placeholder="https://...">
         </div>
         <button class="publish-btn" id="saveInterpBtn">Save interpretation</button>
         <button class="add-opt" id="backToPicker" style="margin-top:10px;">← Back to case list</button>
@@ -1125,12 +1110,11 @@
       el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
         c.interpDate = el.querySelector('#eInterpDate').value;
         c.interp = {
-          mechanism: el.querySelector('#eMech').value.trim(),
-          evidence: el.querySelector('#eEvid').value.trim(),
-          management: el.querySelector('#eMgmt').value.trim(),
+          text: el.querySelector('#eText').value.trim(),
           image: eInterpImageData,
         };
         c.citation = el.querySelector('#eCitation').value.trim();
+        c.link = el.querySelector('#eLink').value.trim();
         await saveCases();
         toast('Interpretation saved');
         el.dataset.editId = '';
