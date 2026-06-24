@@ -1250,15 +1250,16 @@
  
   function buildLinksUI(containerId, existingLinks){
     const links = existingLinks && existingLinks.length ? existingLinks : [{label:'', url:''}];
-    const rowStyle = 'display:flex; gap:6px; margin-bottom:8px;';
-    const inputStyle1 = 'width:35%; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;';
-    const inputStyle2 = 'flex:1; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;';
-    const btnStyle = 'padding:0 10px; color:var(--red); border-color:var(--red); flex-shrink:0;';
+    const rowStyle = 'display:flex; gap:6px; margin-bottom:8px; align-items:center;';
+    const inputBase = 'background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px; min-width:0;';
+    const labelStyle = inputBase + 'width:28%;';
+    const urlStyle = inputBase + 'flex:1;';
+    const btnStyle = 'padding:0 8px; height:34px; color:var(--red); border-color:var(--red); flex-shrink:0; width:32px;';
     let rows = '';
     for(let i=0; i<links.length; i++){
       rows += '<div class="link-row" style="' + rowStyle + '">' +
-        '<input type="text" class="link-label" placeholder="Label (optional)" value="' + escapeHtml(links[i].label||'') + '" style="' + inputStyle1 + '">' +
-        '<input type="text" class="link-url" placeholder="https://..." value="' + escapeHtml(links[i].url||'') + '" style="' + inputStyle2 + '">' +
+        '<input type="text" class="link-label" placeholder="Label" value="' + escapeHtml(links[i].label||'') + '" style="' + labelStyle + '">' +
+        '<input type="text" class="link-url" placeholder="https://..." value="' + escapeHtml(links[i].url||'') + '" style="' + urlStyle + '">' +
         '<button class="remove-link add-opt" style="' + btnStyle + '">\u2715</button>' +
         '</div>';
     }
@@ -1268,15 +1269,16 @@
  
   function wireLinksUI(formBlock){
     const wrap = formBlock.querySelector('[id$="LinksWrap"]');
-    const inputStyle1 = 'width:35%; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;';
-    const inputStyle2 = 'flex:1; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;';
-    const btnStyle = 'padding:0 10px; color:var(--red); border-color:var(--red); flex-shrink:0;';
+    const inputBase = 'background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px; min-width:0;';
+    const labelStyle = inputBase + 'width:28%;';
+    const urlStyle = inputBase + 'flex:1;';
+    const btnStyle = 'padding:0 8px; height:34px; color:var(--red); border-color:var(--red); flex-shrink:0; width:32px;';
     formBlock.querySelector('.add-link-btn').addEventListener('click', ()=>{
       const row = document.createElement('div');
       row.className = 'link-row';
-      row.style.cssText = 'display:flex; gap:6px; margin-bottom:8px;';
-      row.innerHTML = '<input type="text" class="link-label" placeholder="Label (optional)" style="' + inputStyle1 + '">' +
-        '<input type="text" class="link-url" placeholder="https://..." style="' + inputStyle2 + '">' +
+      row.style.cssText = 'display:flex; gap:6px; margin-bottom:8px; align-items:center;';
+      row.innerHTML = '<input type="text" class="link-label" placeholder="Label" style="' + labelStyle + '">' +
+        '<input type="text" class="link-url" placeholder="https://..." style="' + urlStyle + '">' +
         '<button class="remove-link add-opt" style="' + btnStyle + '">\u2715</button>';
       wrap.appendChild(row);
       row.querySelector('.remove-link').addEventListener('click', ()=> row.remove());
