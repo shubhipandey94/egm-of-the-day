@@ -607,7 +607,16 @@
         <div class="interp">
           ${(i.text || i.mechanism || i.evidence || i.management) ? `<p style="white-space:pre-wrap;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n'))}</p>` : ''}
           ${i.image ? `<div style="margin:0 0 16px; border:1px solid var(--line); border-radius:8px; overflow:hidden;"><img src="${i.image}" style="display:block; width:100%; height:auto;" alt="Interpretation tracing"></div>` : ''}
-          ${c.citation ? `<div class="citation">Source / citation: ${escapeHtml(c.citation)}${c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener" style="color:var(--amber);">View reference ↗</a>` : ''}</div>` : (c.link ? `<div class="citation"><a href="${escapeHtml(c.link)}" target="_blank" rel="noopener" style="color:var(--amber);">View reference ↗</a></div>` : '')}
+          ${(()=>{
+            const links = c.links || (c.link ? [{label:'', url:c.link}] : []); // backward compat
+            const linksHtml = links.filter(l=>l.url).map(l=>
+              `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="color:var(--amber); display:inline-block; margin-right:12px;">${escapeHtml(l.label||'View reference')} ↗</a>`
+            ).join('');
+            if(c.citation && linksHtml) return `<div class="citation">Source / citation: ${escapeHtml(c.citation)}<br>${linksHtml}</div>`;
+            if(c.citation) return `<div class="citation">Source / citation: ${escapeHtml(c.citation)}</div>`;
+            if(linksHtml) return `<div class="citation">${linksHtml}</div>`;
+            return '';
+          })()}
         </div>
       `;
     }
@@ -775,8 +784,8 @@
         <input type="text" id="pCitation" placeholder="e.g. de-identified case, EP lab 2026; or journal ref">
       </div>
       <div class="form-block">
-        <label>Reference link (optional)</label>
-        <input type="text" id="pLink" placeholder="https://...">
+        <label>Reference links (optional)</label>
+        ${buildLinksUI('pLinksWrap', [])}
       </div>
       <button class="publish-btn" id="publishBtn">Publish case</button>
       <button class="add-opt" id="saveDraftBtn" style="margin-top:8px; width:100%;">Save as draft</button>
@@ -789,6 +798,7 @@
     el.querySelector('#importFile').addEventListener('change', (e)=>{
       importBackupFile(e.target.files[0], ()=>renderPost());
     });
+    wireLinksUI(el.querySelector('#pLinksWrap').closest('.form-block'));
  
     let optCount = 0;
     function addOptRow(label='', correct=false){
@@ -855,7 +865,7 @@
           image: interpImageData,
         },
         citation: el.querySelector('#pCitation').value.trim(),
-        link: el.querySelector('#pLink').value.trim(),
+        links: collectLinks(el.querySelector('#pLinksWrap')),
         comments: [],
         status,
       };
@@ -1014,8 +1024,8 @@
           <div class="form-block"><label>Citation / source (optional)</label>
             <input type="text" id="dCitation" value="${escapeHtml(c.citation||'')}">
           </div>
-          <div class="form-block"><label>Reference link (optional)</label>
-            <input type="text" id="dLink" value="${escapeHtml(c.link||'')}" placeholder="https://...">
+          <div class="form-block"><label>Reference links (optional)</label>
+            ${buildLinksUI('dLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []))}
           </div>
           <button class="publish-btn" id="dSaveDraft">Save draft</button>
           <button class="publish-btn" id="dGoLive" style="margin-top:8px; background:var(--teal); color:var(--ink-900);">Save &amp; go live</button>
@@ -1041,6 +1051,7 @@
         addDOptRow(); addDOptRow();
       }
       ds.querySelector('#dAddOpt').addEventListener('click', ()=> addDOptRow());
+      wireLinksUI(ds.querySelector('#dLinksWrap').closest('.form-block'));
  
       // image uploads
       let dImageData = c.image || null;
@@ -1086,7 +1097,7 @@
             image: dInterpImageData,
           },
           citation: ds.querySelector('#dCitation').value.trim(),
-          link: ds.querySelector('#dLink').value.trim(),
+          links: collectLinks(ds.querySelector('#dLinksWrap')),
           status,
         };
       }
@@ -1194,14 +1205,15 @@
           <input type="text" id="eCitation" value="${escapeHtml(c.citation||'')}">
         </div>
         <div class="form-block">
-          <label>Reference link (optional)</label>
-          <input type="text" id="eLink" value="${escapeHtml(c.link||'')}" placeholder="https://...">
+          <label>Reference links (optional)</label>
+          ${buildLinksUI('eLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []))}
         </div>
         <button class="publish-btn" id="saveInterpBtn">Save interpretation</button>
         <button class="add-opt" id="backToPicker" style="margin-top:10px;">← Back to case list</button>
       `;
       let eInterpImageData = i.image || null;
       const eidz = el.querySelector('#eInterpDropZone');
+      wireLinksUI(el.querySelector('#eLinksWrap').closest('.form-block'));
       el.querySelector('#eInterpImage').addEventListener('change', async (e)=>{
         const file = e.target.files[0];
         if(!file) return;
@@ -1217,7 +1229,7 @@
           image: eInterpImageData,
         };
         c.citation = el.querySelector('#eCitation').value.trim();
-        c.link = el.querySelector('#eLink').value.trim();
+        c.links = collectLinks(el.querySelector('#eLinksWrap'));
         await saveCases();
         toast('Interpretation saved');
         el.dataset.editId = '';
@@ -1230,6 +1242,47 @@
     }
   }
  
+  function buildLinksUI(containerId, existingLinks){
+    const links = existingLinks && existingLinks.length ? existingLinks : [{label:'', url:''}];
+    return `
+      <div id="${containerId}">
+        ${links.map((l,i)=>`
+          <div class="link-row" style="display:flex; gap:6px; margin-bottom:8px;" data-link-idx="${i}">
+            <input type="text" class="link-label" placeholder="Label (optional)" value="${escapeHtml(l.label||'')}" style="width:35%; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;">
+            <input type="text" class="link-url" placeholder="https://..." value="${escapeHtml(l.url||'')}" style="flex:1; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;">
+            <button class="remove-link add-opt" style="padding:0 10px; color:var(--red); border-color:var(--red); flex-shrink:0;">✕</button>
+          </div>
+        `).join('')}
+      </div>
+      <button class="add-opt add-link-btn" style="width:100%; margin-bottom:6px;">+ Add another link</button>
+    `;
+  }
+ 
+  function wireLinksUI(formBlock){
+    const wrap = formBlock.querySelector('[id$="LinksWrap"]');
+    formBlock.querySelector('.add-link-btn').addEventListener('click', ()=>{
+      const row = document.createElement('div');
+      row.className = 'link-row';
+      row.style.cssText = 'display:flex; gap:6px; margin-bottom:8px;';
+      row.innerHTML = `
+        <input type="text" class="link-label" placeholder="Label (optional)" style="width:35%; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;">
+        <input type="text" class="link-url" placeholder="https://..." style="flex:1; background:var(--ink-800); border:1px solid var(--line); border-radius:7px; color:var(--paper); padding:9px 10px; font-family:inherit; font-size:12px;">
+        <button class="remove-link add-opt" style="padding:0 10px; color:var(--red); border-color:var(--red); flex-shrink:0;">✕</button>
+      `;
+      wrap.appendChild(row);
+      row.querySelector('.remove-link').addEventListener('click', ()=> row.remove());
+    });
+    wrap.querySelectorAll('.remove-link').forEach(btn=>{
+      btn.addEventListener('click', ()=> btn.closest('.link-row').remove());
+    });
+  }
+ 
+  function collectLinks(wrap){
+    return [...wrap.querySelectorAll('.link-row')].map(row=>({
+      label: row.querySelector('.link-label').value.trim(),
+      url: row.querySelector('.link-url').value.trim(),
+    })).filter(l=>l.url);
+  }
   function escapeHtml(s){
     if(!s) return '';
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
