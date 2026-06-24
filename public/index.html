@@ -784,22 +784,23 @@
         <label>Citation / source (optional)</label>
         <input type="text" id="pCitation" placeholder="e.g. de-identified case, EP lab 2026; or journal ref">
       </div>
-      <div class="form-block">
+      <div class="form-block" id="pLinksFormBlock">
         <label>Reference links (optional)</label>
-        ${buildLinksUI('pLinksWrap', [])}
+        <div id="pLinksPlaceholder"></div>
       </div>
       <button class="publish-btn" id="publishBtn">Publish case</button>
       <button class="add-opt" id="saveDraftBtn" style="margin-top:8px; width:100%;">Save as draft</button>
       <button class="add-opt" id="changePasscodeBtn" style="margin-top:10px;">Change posting passcode</button>
     `;
  
+    el.querySelector('#pLinksPlaceholder').outerHTML = buildLinksUI('pLinksWrap', []);
     el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
     el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
     el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
     el.querySelector('#importFile').addEventListener('change', (e)=>{
       importBackupFile(e.target.files[0], ()=>renderPost());
     });
-    wireLinksUI(el.querySelector('#pLinksWrap').closest('.form-block'));
+    wireLinksUI(el.querySelector('#pLinksFormBlock'));
  
     let optCount = 0;
     function addOptRow(label='', correct=false){
@@ -1025,13 +1026,16 @@
           <div class="form-block"><label>Citation / source (optional)</label>
             <input type="text" id="dCitation" value="${escapeHtml(c.citation||'')}">
           </div>
-          <div class="form-block"><label>Reference links (optional)</label>
-            ${buildLinksUI('dLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []))}
+          <div class="form-block" id="dLinksFormBlock"><label>Reference links (optional)</label>
+            <div id="dLinksPlaceholder"></div>
           </div>
           <button class="publish-btn" id="dSaveDraft">Save draft</button>
           <button class="publish-btn" id="dGoLive" style="margin-top:8px; background:var(--teal); color:var(--ink-900);">Save &amp; go live</button>
         </div>
       `;
+ 
+      // inject links UI after template render
+      ds.querySelector('#dLinksPlaceholder').outerHTML = buildLinksUI('dLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []));
  
       // populate existing options
       let dOptCount = 0;
@@ -1052,7 +1056,7 @@
         addDOptRow(); addDOptRow();
       }
       ds.querySelector('#dAddOpt').addEventListener('click', ()=> addDOptRow());
-      wireLinksUI(ds.querySelector('#dLinksWrap').closest('.form-block'));
+      wireLinksUI(ds.querySelector('#dLinksFormBlock'));
  
       // image uploads
       let dImageData = c.image || null;
@@ -1205,16 +1209,17 @@
           <label>Citation / source (optional)</label>
           <input type="text" id="eCitation" value="${escapeHtml(c.citation||'')}">
         </div>
-        <div class="form-block">
+        <div class="form-block" id="eLinksFormBlock">
           <label>Reference links (optional)</label>
-          ${buildLinksUI('eLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []))}
+          <div id="eLinksPlaceholder"></div>
         </div>
         <button class="publish-btn" id="saveInterpBtn">Save interpretation</button>
         <button class="add-opt" id="backToPicker" style="margin-top:10px;">← Back to case list</button>
       `;
+      el.querySelector('#eLinksPlaceholder').outerHTML = buildLinksUI('eLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []));
       let eInterpImageData = i.image || null;
       const eidz = el.querySelector('#eInterpDropZone');
-      wireLinksUI(el.querySelector('#eLinksWrap').closest('.form-block'));
+      wireLinksUI(el.querySelector('#eLinksFormBlock'));
       el.querySelector('#eInterpImage').addEventListener('change', async (e)=>{
         const file = e.target.files[0];
         if(!file) return;
