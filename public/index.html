@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -355,13 +356,20 @@
         localStorage.setItem('egmlocal:' + key, value);
         return { key, value, shared: false };
       }
+      console.log('[storage] set', key, 'length:', value.length);
       const res = await fetch('/api/storage', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({key, value})
       });
-      if(!res.ok) return null;
+      console.log('[storage] set response status:', res.status);
+      if(!res.ok){
+        const text = await res.text();
+        console.error('[storage] set error:', text);
+        return null;
+      }
       const data = await res.json();
+      console.log('[storage] set success:', data.key);
       return { key: data.key, value: data.value, shared: true };
     },
     async delete(key, shared){
@@ -617,16 +625,19 @@
     } else {
       const fs = el.querySelector('#freeSubmit');
       if(fs) fs.addEventListener('click', ()=>{
-        c._freeGuess = el.querySelector('#freeGuess').value;
+        const guess = el.querySelector('#freeGuess').value.trim();
+        if(!guess){ toast('Add your read before locking in'); return; }
+        c._freeGuess = guess;
         if(!isPreviewing) recordAnswered(c.id);
-        toast('Guess locked in');
+        renderToday();
       });
     }
  
     renderInterp();
  
     if(available){
-      el.querySelector('#revealBtn').addEventListener('click', ()=>{
+      const revealBtn = el.querySelector('#revealBtn');
+      if(revealBtn) revealBtn.addEventListener('click', ()=>{
         c._revealed = !c._revealed;
         renderToday();
       });
