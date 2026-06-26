@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -867,21 +866,26 @@
           image: interpImageData,
         },
         citation: el.querySelector('#pCitation').value.trim(),
-        links: collectLinks(el.querySelector('#pLinksWrap')),
+        links: el.querySelector('#pLinksWrap') ? collectLinks(el.querySelector('#pLinksWrap')) : [],
         comments: [],
         status,
       };
     }
  
     el.querySelector('#publishBtn').addEventListener('click', async ()=>{
-      const newCase = buildCaseFromForm('live');
-      if(!newCase) return;
-      cases.unshift(newCase);
-      cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-      await saveCases();
-      toast('Case published');
-      currentCaseId = newCase.id;
-      switchTab('today');
+      try{
+        const newCase = buildCaseFromForm('live');
+        if(!newCase) return;
+        cases.unshift(newCase);
+        cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
+        await saveCases();
+        toast('Case published');
+        currentCaseId = newCase.id;
+        switchTab('today');
+      }catch(err){
+        console.error('Publish error:', err);
+        toast('Error publishing — check console for details');
+      }
     });
  
     el.querySelector('#saveDraftBtn').addEventListener('click', async ()=>{
@@ -1102,7 +1106,7 @@
             image: dInterpImageData,
           },
           citation: ds.querySelector('#dCitation').value.trim(),
-          links: collectLinks(ds.querySelector('#dLinksWrap')),
+          links: ds.querySelector('#dLinksWrap') ? collectLinks(ds.querySelector('#dLinksWrap')) : [],
           status,
         };
       }
@@ -1235,7 +1239,7 @@
           image: eInterpImageData,
         };
         c.citation = el.querySelector('#eCitation').value.trim();
-        c.links = collectLinks(el.querySelector('#eLinksWrap'));
+        c.links = el.querySelector('#eLinksWrap') ? collectLinks(el.querySelector('#eLinksWrap')) : [];
         await saveCases();
         toast('Interpretation saved');
         el.dataset.editId = '';
