@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -297,6 +296,8 @@
   function uid(){ return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
  
   // ---------- streak ----------
+  const STREAK_WINDOW_MS = 72 * 60 * 60 * 1000; // 72 hours
+ 
   function getAnsweredIds(){
     try{ return JSON.parse(localStorage.getItem('egm:answered') || '[]'); }catch(e){ return []; }
   }
@@ -304,15 +305,44 @@
     const ids = getAnsweredIds();
     if(!ids.includes(caseId)){ ids.push(caseId); localStorage.setItem('egm:answered', JSON.stringify(ids)); }
   }
+  function casePostedAt(c){
+    // treat date as start of day in local time
+    return new Date(c.date + 'T00:00:00').getTime();
+  }
+  function isWithinWindow(c){
+    return Date.now() - casePostedAt(c) <= STREAK_WINDOW_MS;
+  }
   function computeStreak(){
     const answeredIds = new Set(getAnsweredIds());
-    const liveCases = cases.filter(isLive).sort((a,b)=> new Date(a.date)-new Date(b.date));
+    const now = Date.now();
+    const liveCases = cases.filter(isLive).sort((a,b)=> casePostedAt(a)-casePostedAt(b));
     let streak = 0;
     for(let i = liveCases.length-1; i >= 0; i--){
-      if(answeredIds.has(liveCases[i].id)) streak++;
-      else break;
+      const c = liveCases[i];
+      const postedAt = casePostedAt(c);
+      const withinWindow = (now - postedAt) <= STREAK_WINDOW_MS;
+      if(answeredIds.has(c.id)){
+        streak++;
+      } else if(!withinWindow){
+        // missed this case and window has passed — streak breaks here
+        break;
+      }
+      // if within window and not answered yet, don't break — still has time
     }
     return streak;
+  }
+  function getStreakAtRiskCase(){
+    // find the most recent unanswered case still within the 72hr window
+    const answeredIds = new Set(getAnsweredIds());
+    const liveCases = cases.filter(isLive).sort((a,b)=> casePostedAt(b)-casePostedAt(a));
+    for(const c of liveCases){
+      if(!answeredIds.has(c.id) && isWithinWindow(c)) return c;
+    }
+    return null;
+  }
+  function fmtDeadline(c){
+    const deadline = new Date(casePostedAt(c) + STREAK_WINDOW_MS);
+    return deadline.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' at ' + deadline.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
   }
  
   // ---------- difficulty ----------
@@ -551,9 +581,19 @@
     const streak = !isPreviewing ? computeStreak() : 0;
     const myDiffVote = getMyDifficultyVote(c.id);
     const diffAvg = difficultyAverage(c.diffRatings);
+    const atRiskCase = !isPreviewing ? getStreakAtRiskCase() : null;
+    const showStreakBanner = atRiskCase && !sessionStorage.getItem('egm:streak-banner-dismissed-' + atRiskCase.id);
+ 
+    const streakBanner = showStreakBanner ? `
+      <div id="streakBanner" style="background:rgba(232,162,61,0.12); border:1px solid var(--amber-dim); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+        <span style="font-size:12px; color:var(--amber); line-height:1.6;">🔥 There's an unanswered case from ${fmtDate(atRiskCase.date)}. Go to Archive to answer it by ${fmtDeadline(atRiskCase)} to keep your streak alive.</span>
+        <button id="dismissStreakBanner" style="background:transparent; border:none; color:var(--paper-dim); font-size:16px; cursor:pointer; flex-shrink:0; padding:0 4px;">✕</button>
+      </div>
+    ` : '';
  
     el.innerHTML = `
       ${previewBanner}
+      ${streakBanner}
       <div class="case-meta">
         <span class="eyebrow">Case · ${isPreviewing ? 'draft preview' : c.id === pickTodaysCase()?.id ? "today's read" : 'archived'}</span>
         <div style="display:flex; align-items:center; gap:10px;">
@@ -591,6 +631,13 @@
         previewDraftId = null;
         currentCaseId = null;
         switchTab('post');
+      });
+    }
+ 
+    if(showStreakBanner){
+      el.querySelector('#dismissStreakBanner').addEventListener('click', ()=>{
+        sessionStorage.setItem('egm:streak-banner-dismissed-' + atRiskCase.id, '1');
+        el.querySelector('#streakBanner').remove();
       });
     }
  
