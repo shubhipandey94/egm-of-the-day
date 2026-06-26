@@ -295,7 +295,45 @@
  
   function uid(){ return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
  
-  // ---------- storage shim ----------
+  // ---------- streak ----------
+  function getAnsweredIds(){
+    try{ return JSON.parse(localStorage.getItem('egm:answered') || '[]'); }catch(e){ return []; }
+  }
+  function recordAnswered(caseId){
+    const ids = getAnsweredIds();
+    if(!ids.includes(caseId)){ ids.push(caseId); localStorage.setItem('egm:answered', JSON.stringify(ids)); }
+  }
+  function computeStreak(){
+    const answeredIds = new Set(getAnsweredIds());
+    const liveCases = cases.filter(isLive).sort((a,b)=> new Date(a.date)-new Date(b.date));
+    let streak = 0;
+    for(let i = liveCases.length-1; i >= 0; i--){
+      if(answeredIds.has(liveCases[i].id)) streak++;
+      else break;
+    }
+    return streak;
+  }
+ 
+  // ---------- difficulty ----------
+  function getMyDifficultyVote(caseId){
+    try{ return JSON.parse(localStorage.getItem('egm:diff') || '{}')[caseId] || null; }catch(e){ return null; }
+  }
+  function recordDifficultyVote(caseId, rating){
+    try{
+      const d = JSON.parse(localStorage.getItem('egm:diff') || '{}');
+      d[caseId] = rating;
+      localStorage.setItem('egm:diff', JSON.stringify(d));
+    }catch(e){}
+  }
+  function difficultyAverage(ratings){
+    if(!ratings || Object.keys(ratings).length === 0) return null;
+    const map = {easy:1, medium:2, hard:3};
+    const rmap = ['','Easy','Medium','Hard'];
+    const vals = Object.values(ratings).map(r=>map[r]).filter(Boolean);
+    if(!vals.length) return null;
+    const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+    return rmap[Math.round(avg)];
+  }
   // Drop-in replacement for Claude's window.storage API, backed by Cloudflare D1
   // via /api/storage for shared data, and plain localStorage for personal
   // (non-shared) data like the remembered display name.
@@ -488,30 +526,35 @@
     }
  
     let revealBtnHtml;
-    if(!hasOptions || answered){
-      // only show reveal button after answer submitted (or if no options at all)
-      if(available){
+    const freeTextAnswered = !hasOptions && !!c._freeGuess;
+    if((!hasOptions && !freeTextAnswered) || (hasOptions && !answered)){
+      revealBtnHtml = ''; // hidden until answer submitted
+    } else if(available){
         revealBtnHtml = `<button id="revealBtn" class="reveal-toggle ${revealed?'open':''}">
           ${revealed ? 'Hide interpretation' : 'Reveal interpretation'} <span class="chev">▾</span>
         </button>`;
-      } else {
-        const when = c.interpDate ? fmtDate(c.interpDate) : 'soon';
-        revealBtnHtml = `<div class="reveal-toggle" style="opacity:0.5; cursor:default;">
-          Interpretation posts ${when}
-        </div>`;
-      }
     } else {
-      revealBtnHtml = ''; // hidden until answer submitted
+      const when = c.interpDate ? fmtDate(c.interpDate) : 'soon';
+      revealBtnHtml = `<div class="reveal-toggle" style="opacity:0.5; cursor:default;">
+        Interpretation posts ${when}
+      </div>`;
     }
+ 
+    const streak = !isPreviewing ? computeStreak() : 0;
+    const myDiffVote = getMyDifficultyVote(c.id);
+    const diffAvg = difficultyAverage(c.diffRatings);
  
     el.innerHTML = `
       ${previewBanner}
       <div class="case-meta">
         <span class="eyebrow">Case · ${isPreviewing ? 'draft preview' : c.id === pickTodaysCase()?.id ? "today's read" : 'archived'}</span>
-        <span class="date">${fmtDate(c.date)}</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          ${streak > 0 ? `<span style="font-size:12px; color:var(--amber);">🔥 ${streak}</span>` : ''}
+          <span class="date">${fmtDate(c.date)}</span>
+        </div>
       </div>
-      <div class="scope-card">
-        ${c.image ? `<img src="${c.image}" alt="EGM tracing">` : `<div class="img-empty">No image attached</div>`}
+      <div class="scope-card" ${!c.image ? 'style="display:none;"' : ''}>
+        ${c.image ? `<img src="${c.image}" alt="EGM tracing">` : ''}
         ${c.caption ? `<div class="caption">${escapeHtml(c.caption)}</div>` : ''}
       </div>
       <p class="prompt-title">${escapeHtml(c.title)}</p>
@@ -523,6 +566,7 @@
         </div>` : ''}
       ${revealBtnHtml}
       <div id="interpBlock"></div>
+      <div id="diffBlock"></div>
       <div class="comments">
         <h3>Discussion (${(c.comments||[]).length})</h3>
         <div id="commentList"></div>
@@ -562,6 +606,7 @@
             c.votes = c.votes || {};
             c.votes[idx] = (c.votes[idx] || 0) + 1;
             if(interpAvailable(c)) c._revealed = true;
+            recordAnswered(c.id);
             await saveCases();
           } else {
             if(interpAvailable(c)) c._revealed = true;
@@ -573,6 +618,7 @@
       const fs = el.querySelector('#freeSubmit');
       if(fs) fs.addEventListener('click', ()=>{
         c._freeGuess = el.querySelector('#freeGuess').value;
+        if(!isPreviewing) recordAnswered(c.id);
         toast('Guess locked in');
       });
     }
@@ -601,7 +647,7 @@
  
     function renderInterp(){
       const block = el.querySelector('#interpBlock');
-      if(!available || !c._revealed){ block.innerHTML=''; return; }
+      if(!available || !c._revealed){ block.innerHTML=''; renderDiff(); return; }
       const i = c.interp || {};
       block.innerHTML = `
         <div class="interp">
@@ -619,6 +665,48 @@
           })()}
         </div>
       `;
+      renderDiff();
+    }
+ 
+    function renderDiff(){
+      const block = el.querySelector('#diffBlock');
+      if(!block) return;
+      if(!available || !c._revealed || isPreviewing){ block.innerHTML=''; return; }
+      const myVote = getMyDifficultyVote(c.id);
+      const avg = difficultyAverage(c.diffRatings);
+      const total = c.diffRatings ? Object.keys(c.diffRatings).length : 0;
+      const diffColors = {Easy:'var(--teal)', Medium:'var(--amber)', Hard:'var(--red)'};
+      const btnStyle = (rating) => {
+        const active = myVote === rating.toLowerCase();
+        return 'padding:8px 16px; border-radius:7px; font-size:12px; font-family:inherit; cursor:pointer; ' +
+          'border:1px solid ' + (active ? diffColors[rating] : 'var(--line)') + '; ' +
+          'background:' + (active ? 'rgba(0,0,0,0.2)' : 'var(--ink-800)') + '; ' +
+          'color:' + (active ? diffColors[rating] : 'var(--paper-dim)') + ';';
+      };
+      block.innerHTML = '<div style="border-top:1px solid var(--line); padding-top:16px; margin-bottom:20px;">' +
+        '<div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--paper-dim); margin-bottom:10px;">How difficult was this case?</div>' +
+        '<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">' +
+        '<button class="diff-btn" data-rating="easy" style="' + btnStyle('Easy') + '">Easy</button>' +
+        '<button class="diff-btn" data-rating="medium" style="' + btnStyle('Medium') + '">Medium</button>' +
+        '<button class="diff-btn" data-rating="hard" style="' + btnStyle('Hard') + '">Hard</button>' +
+        (avg && total > 0 ? '<span style="font-size:11px; color:' + diffColors[avg] + '; margin-left:8px;">' + avg + ' · ' + total + ' vote' + (total===1?'':'s') + '</span>' : '') +
+        '</div></div>';
+      block.querySelectorAll('.diff-btn').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const rating = btn.dataset.rating;
+          if(myVote === rating) return; // already voted this
+          // remove old vote if changing
+          if(myVote && c.diffRatings && c.diffRatings[userName+':'+c.id]){
+            delete c.diffRatings[userName+':'+c.id];
+          }
+          c.diffRatings = c.diffRatings || {};
+          const key = (userName||'anon') + ':' + c.id;
+          c.diffRatings[key] = rating;
+          recordDifficultyVote(c.id, rating);
+          await saveCases();
+          renderDiff();
+        });
+      });
     }
     function renderComments(){
       const list = el.querySelector('#commentList');
@@ -646,7 +734,7 @@
         <div class="thumb">${c.image?`<img src="${c.image}">`:''}</div>
         <div class="meta-col">
           <p class="t">${escapeHtml(c.title)}</p>
-          <div class="d">${fmtDate(c.date)}${!interpAvailable(c) ? ' · interpretation pending' : ''}</div>
+          <div class="d">${fmtDate(c.date)}${!interpAvailable(c) ? ' · interpretation pending' : ''}${difficultyAverage(c.diffRatings) ? ' · ' + difficultyAverage(c.diffRatings) : ''}</div>
         </div>
         <div class="arrow">→</div>
       </div>
