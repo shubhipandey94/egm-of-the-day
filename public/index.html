@@ -733,6 +733,7 @@
  
     function shouldShowDiff(){
       if(isPreviewing) return false;
+      if(hasOptions) return false; // multiple choice uses vote percentages instead
       return available && revealed;
     }
  
