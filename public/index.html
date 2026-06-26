@@ -332,11 +332,13 @@
     return streak;
   }
   function getStreakAtRiskCase(){
-    // find the most recent unanswered case still within the 72hr window
+    // find the most recent unanswered case that is within the 72hr window
+    // but has been posted for more than 24hrs (so we don't nag immediately)
     const answeredIds = new Set(getAnsweredIds());
     const liveCases = cases.filter(isLive).sort((a,b)=> casePostedAt(b)-casePostedAt(a));
     for(const c of liveCases){
-      if(!answeredIds.has(c.id) && isWithinWindow(c)) return c;
+      const age = Date.now() - casePostedAt(c);
+      if(!answeredIds.has(c.id) && isWithinWindow(c) && age > 24 * 60 * 60 * 1000) return c;
     }
     return null;
   }
@@ -681,6 +683,7 @@
     }
  
     renderInterp();
+    renderDiff();
  
     if(available){
       const revealBtn = el.querySelector('#revealBtn');
@@ -707,12 +710,14 @@
       const block = el.querySelector('#interpBlock');
       if(!available || !c._revealed){ block.innerHTML=''; renderDiff(); return; }
       const i = c.interp || {};
+      const hasInterpContent = !!(i.text || i.mechanism || i.evidence || i.management || i.image);
+      if(!hasInterpContent){ block.innerHTML=''; renderDiff(); return; }
       block.innerHTML = `
         <div class="interp">
           ${(i.text || i.mechanism || i.evidence || i.management) ? `<p style="white-space:pre-wrap;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n'))}</p>` : ''}
           ${i.image ? `<div style="margin:0 0 16px; border:1px solid var(--line); border-radius:8px; overflow:hidden;"><img src="${i.image}" style="display:block; width:100%; height:auto;" alt="Interpretation tracing"></div>` : ''}
           ${(()=>{
-            const links = c.links || (c.link ? [{label:'', url:c.link}] : []); // backward compat
+            const links = c.links || (c.link ? [{label:'', url:c.link}] : []);
             const linksHtml = links.filter(l=>l.url).map(l=>
               `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="color:var(--amber); display:inline-block; margin-right:12px;">${escapeHtml(l.label||'View reference')} ↗</a>`
             ).join('');
@@ -726,10 +731,15 @@
       renderDiff();
     }
  
+    function shouldShowDiff(){
+      if(isPreviewing) return false;
+      return available && revealed;
+    }
+ 
     function renderDiff(){
       const block = el.querySelector('#diffBlock');
       if(!block) return;
-      if(!available || !c._revealed || isPreviewing){ block.innerHTML=''; return; }
+      if(!shouldShowDiff()){ block.innerHTML=''; return; }
       const myVote = getMyDifficultyVote(c.id);
       const avg = difficultyAverage(c.diffRatings);
       const total = c.diffRatings ? Object.keys(c.diffRatings).length : 0;
