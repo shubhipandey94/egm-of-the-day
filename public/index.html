@@ -400,7 +400,7 @@
  
   function pickTodaysCase(){
     if(cases.length === 0) return null;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayStr();
     let live = cases.filter(isLive);
     let exact = live.find(c => c.date === today);
     if(exact) return exact;
@@ -411,7 +411,8 @@
   }
  
   function todayStr(){
-    return new Date().toISOString().slice(0,10);
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
   function interpAvailable(c){
     const i = c.interp || {};
@@ -740,7 +741,7 @@
     el.innerHTML = subNav + `
       <div class="form-block">
         <label>Date</label>
-        <input type="date" id="pDate" value="${new Date().toISOString().slice(0,10)}">
+        <input type="date" id="pDate" value="${todayStr()}">
       </div>
       <div class="form-block">
         <label>EGM tracing</label>
@@ -765,7 +766,7 @@
       </div>
       <div class="form-block">
         <label>Interpretation release date</label>
-        <input type="date" id="pInterpDate" value="${new Date().toISOString().slice(0,10)}">
+        <input type="date" id="pInterpDate" value="${todayStr()}">
         <div class="hint">Set this to a later date (e.g. tomorrow) if you want the question to post first and the answer to unlock after. You can also leave the interpretation blank now and add it later from "Add / edit interpretation."</div>
       </div>
       <div class="form-block">
@@ -1371,7 +1372,7 @@
       const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const stamp = new Date().toISOString().slice(0,10);
+      const stamp = todayStr();
       a.href = url;
       a.download = `egm-backup-${stamp}.json`;
       document.body.appendChild(a);
