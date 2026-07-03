@@ -438,12 +438,47 @@
     cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
   }
   async function saveCases(){
+    const countBefore = cases.length;
     try{
       const r = await window.storage.set(STORAGE_CASES_KEY, JSON.stringify(cases), SHARED);
-      if(!r) toast('Save failed — try again');
+      if(!r){ toast('Save failed — try again'); return false; }
+      try{
+        const verify = await window.storage.get(STORAGE_CASES_KEY, SHARED);
+        if(verify && verify.value){
+          const saved = JSON.parse(verify.value);
+          if(saved.length < countBefore){
+            alert('Warning: the database has fewer cases than expected (' + saved.length + ' vs ' + countBefore + '). Please download a backup immediately from the Post tab.');
+            return false;
+          }
+        }
+      }catch(ve){}
+      return true;
     }catch(e){
       toast('Save failed — try again');
+      return false;
     }
+  }
+ 
+  function promptBackup(){
+    const payload = {exportedAt:new Date().toISOString(),app:'EGM of the Day',caseCount:cases.length,cases};
+    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const stamp = todayStr();
+    const t = document.createElement('div');
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#171f2b;border:1px solid #4fb6a8;color:#e8e6df;padding:10px 16px;border-radius:8px;font-size:11px;z-index:9999;display:flex;gap:10px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.5);';
+    t.innerHTML='<span>Saved ✓ — download a backup?</span>';
+    const btn = document.createElement('a');
+    btn.href=url;btn.download='egm-backup-'+stamp+'.json';
+    btn.style.cssText='background:#4fb6a8;color:#0a0e14;padding:4px 10px;border-radius:5px;font-size:10px;text-decoration:none;font-weight:700;text-transform:uppercase;letter-spacing:.5px;';
+    btn.textContent='Download';
+    const skip = document.createElement('button');
+    skip.textContent='✕';
+    skip.style.cssText='background:transparent;border:none;color:#9aa3b0;cursor:pointer;font-size:14px;padding:0 2px;';
+    skip.onclick=()=>{document.body.removeChild(t);URL.revokeObjectURL(url);};
+    btn.onclick=()=>setTimeout(()=>{if(document.body.contains(t))document.body.removeChild(t);URL.revokeObjectURL(url);},500);
+    t.appendChild(btn);t.appendChild(skip);
+    document.body.appendChild(t);
+    setTimeout(()=>{if(document.body.contains(t)){document.body.removeChild(t);URL.revokeObjectURL(url);}},15000);
   }
  
   async function loadPasscode(){
@@ -1036,10 +1071,8 @@
         if(!newCase) return;
         cases.unshift(newCase);
         cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-        await saveCases();
-        toast('Case published');
-        currentCaseId = newCase.id;
-        switchTab('today');
+        const ok = await saveCases();
+        if(ok){ toast('Case published'); promptBackup(); currentCaseId = newCase.id; switchTab('today'); }
       }catch(err){
         console.error('Publish error:', err);
         toast('Error publishing — check console for details');
@@ -1051,10 +1084,8 @@
       if(!newCase) return;
       cases.unshift(newCase);
       cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-      await saveCases();
-      toast('Draft saved');
-      el.dataset.subMode = 'new';
-      renderPost();
+      const ok = await saveCases();
+      if(ok){ toast('Draft saved'); promptBackup(); el.dataset.subMode = 'new'; renderPost(); }
     });
  
     el.querySelector('#changePasscodeBtn').addEventListener('click', ()=>{
@@ -1273,19 +1304,16 @@
         const edits = collectDraftEdits('draft');
         if(!edits) return;
         Object.assign(c, edits);
-        await saveCases();
-        toast('Draft updated');
-        renderDraftsSection();
+        const ok = await saveCases();
+        if(ok){ toast('Draft updated'); promptBackup(); renderDraftsSection(); }
       });
  
       ds.querySelector('#dGoLive').addEventListener('click', async ()=>{
         const edits = collectDraftEdits('live');
         if(!edits) return;
         Object.assign(c, edits);
-        await saveCases();
-        toast('Case is now live');
-        currentCaseId = c.id;
-        switchTab('today');
+        const ok = await saveCases();
+        if(ok){ toast('Case is now live'); promptBackup(); currentCaseId = c.id; switchTab('today'); }
       });
  
       ds.querySelector('#backToDrafts').addEventListener('click', ()=>{
