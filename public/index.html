@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -397,7 +398,8 @@
       console.log('[storage] set response status:', res.status);
       if(!res.ok){
         const text = await res.text();
-        console.error('[storage] set error:', text);
+        console.error('[storage] set error:', res.status, text);
+        toast('Save failed (' + res.status + ') — image may be too large');
         return null;
       }
       const data = await res.json();
@@ -1513,20 +1515,26 @@
         const img = new Image();
         img.onload = ()=>{
           try{
+            const MAX_DIM = 1200;
             const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            if(canvas.width === 0 || canvas.height === 0){
+            let w = img.naturalWidth, h = img.naturalHeight;
+            if(w === 0 || h === 0){
               URL.revokeObjectURL(blobUrl);
               if(isHeic) toast('⚠ HEIC detected — please export as JPEG from Photos first');
               resolve(dataUrl);
               return;
             }
+            // Resize to max 1200px on longest side
+            if(w > MAX_DIM || h > MAX_DIM){
+              if(w > h){ h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+              else { w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+            }
+            canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#000';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.drawImage(img,0,0);
-            const jpeg = canvas.toDataURL('image/jpeg', 0.92);
+            ctx.fillRect(0,0,w,h);
+            ctx.drawImage(img,0,0,w,h);
+            const jpeg = canvas.toDataURL('image/jpeg', 0.75);
             URL.revokeObjectURL(blobUrl);
             resolve(jpeg.length > 5000 ? jpeg : dataUrl);
           }catch(e){
