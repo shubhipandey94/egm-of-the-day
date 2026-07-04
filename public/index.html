@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -276,9 +275,10 @@
  
 <script>
 (function(){
-  const STORAGE_CASES_KEY = 'egm:cases-index';
+  const STORAGE_CASES_KEY = 'egm:cases-index'; // legacy key — kept for migration
+  const STORAGE_IDS_KEY = 'egm:cases-ids';    // new: just the list of IDs
   const STORAGE_PASSCODE_KEY = 'egm:post-passcode';
-  const SHARED = true; // all case + comment data is shared across the group
+  const SHARED = true;
   let userName = '';
   let postPasscode = null; // null = no passcode set yet (open posting)
   let postUnlocked = false; // unlocked for this session once correct code entered
@@ -398,8 +398,7 @@
       console.log('[storage] set response status:', res.status);
       if(!res.ok){
         const text = await res.text();
-        console.error('[storage] set error:', res.status, text);
-        toast('Save failed (' + res.status + ') — image may be too large');
+        console.error('[storage] set error:', text);
         return null;
       }
       const data = await res.json();
@@ -432,30 +431,67 @@
   // ---------- storage ----------
   async function loadCases(){
     try{
-      const res = await window.storage.get(STORAGE_CASES_KEY, SHARED);
-      cases = res ? JSON.parse(res.value) : [];
+      // Try new per-case format first
+      const idsRes = await window.storage.get(STORAGE_IDS_KEY, SHARED);
+      if(idsRes && idsRes.value){
+        const ids = JSON.parse(idsRes.value);
+        const loaded = [];
+        for(const id of ids){
+          try{
+            const r = await window.storage.get('egm:case:' + id, SHARED);
+            if(r && r.value) loaded.push(JSON.parse(r.value));
+          }catch(e){}
+        }
+        cases = loaded;
+      } else {
+        // Fall back to legacy single-blob format and migrate
+        const res = await window.storage.get(STORAGE_CASES_KEY, SHARED);
+        if(res && res.value){
+          cases = JSON.parse(res.value);
+          // Migrate to per-case format immediately
+          console.log('[migrate] migrating', cases.length, 'cases to per-case storage');
+          await saveCases();
+          // Delete old blob after successful migration
+          try{ await window.storage.delete(STORAGE_CASES_KEY, SHARED); }catch(e){}
+          console.log('[migrate] migration complete');
+        } else {
+          cases = [];
+        }
+      }
     }catch(e){
+      console.error('[loadCases] error:', e);
       cases = [];
     }
     cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
   }
   async function saveCases(){
-    const countBefore = cases.length;
     try{
-      const r = await window.storage.set(STORAGE_CASES_KEY, JSON.stringify(cases), SHARED);
-      if(!r){ toast('Save failed — try again'); return false; }
+      // Save each case individually — avoids D1 1MB row limit
+      const ids = cases.map(c => c.id);
+      const idsR = await window.storage.set(STORAGE_IDS_KEY, JSON.stringify(ids), SHARED);
+      if(!idsR){ toast('Save failed — try again'); return false; }
+      let failed = 0;
+      for(const c of cases){
+        try{
+          const r = await window.storage.set('egm:case:' + c.id, JSON.stringify(c), SHARED);
+          if(!r) failed++;
+        }catch(e){ failed++; console.error('[saveCases] case save error:', e); }
+      }
+      if(failed > 0){ toast('Save failed for ' + failed + ' case(s) — try again'); return false; }
+      // Clean up deleted cases from DB
       try{
-        const verify = await window.storage.get(STORAGE_CASES_KEY, SHARED);
-        if(verify && verify.value){
-          const saved = JSON.parse(verify.value);
-          if(saved.length < countBefore){
-            alert('Warning: the database has fewer cases than expected (' + saved.length + ' vs ' + countBefore + '). Please download a backup immediately from the Post tab.');
-            return false;
+        const allKeys = await window.storage.list('egm:case:', SHARED);
+        if(allKeys && allKeys.keys){
+          const currentIds = new Set(ids);
+          for(const key of allKeys.keys){
+            const id = key.replace('egm:case:', '');
+            if(!currentIds.has(id)) await window.storage.delete(key, SHARED);
           }
         }
-      }catch(ve){}
+      }catch(e){}
       return true;
     }catch(e){
+      console.error('[saveCases] error:', e);
       toast('Save failed — try again');
       return false;
     }
@@ -1073,8 +1109,8 @@
         if(!newCase) return;
         cases.unshift(newCase);
         cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const ok = await saveCases();
-        if(ok){ toast('Case published'); promptBackup(); currentCaseId = newCase.id; switchTab('today'); }
+        const ok1 = await saveCases();
+        if(ok1){ toast('Case published'); promptBackup(); currentCaseId = newCase.id; switchTab('today'); }
       }catch(err){
         console.error('Publish error:', err);
         toast('Error publishing — check console for details');
@@ -1086,8 +1122,8 @@
       if(!newCase) return;
       cases.unshift(newCase);
       cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-      const ok = await saveCases();
-      if(ok){ toast('Draft saved'); promptBackup(); el.dataset.subMode = 'new'; renderPost(); }
+      const ok2 = await saveCases();
+      if(ok2){ toast('Draft saved'); promptBackup(); el.dataset.subMode = 'new'; renderPost(); }
     });
  
     el.querySelector('#changePasscodeBtn').addEventListener('click', ()=>{
@@ -1140,10 +1176,8 @@
           const c = cases.find(x=>x.id===btn.dataset.id);
           if(!c) return;
           c.status = 'live';
-          await saveCases();
-          toast('Case is now live');
-          currentCaseId = c.id;
-          switchTab('today');
+          const ok4 = await saveCases();
+          if(ok4){ toast('Case is now live'); promptBackup(); currentCaseId = c.id; switchTab('today'); }
         });
       });
       existing.querySelectorAll('.draft-preview').forEach(btn=>{
@@ -1306,16 +1340,18 @@
         const edits = collectDraftEdits('draft');
         if(!edits) return;
         Object.assign(c, edits);
-        const ok = await saveCases();
-        if(ok){ toast('Draft updated'); promptBackup(); renderDraftsSection(); }
+        const okd = await saveCases();
+        if(okd){ toast('Draft updated'); promptBackup(); renderDraftsSection(); }
       });
  
       ds.querySelector('#dGoLive').addEventListener('click', async ()=>{
         const edits = collectDraftEdits('live');
         if(!edits) return;
         Object.assign(c, edits);
-        const ok = await saveCases();
-        if(ok){ toast('Case is now live'); promptBackup(); currentCaseId = c.id; switchTab('today'); }
+        await saveCases();
+        toast('Case is now live');
+        currentCaseId = c.id;
+        switchTab('today');
       });
  
       ds.querySelector('#backToDrafts').addEventListener('click', ()=>{
@@ -1515,26 +1551,20 @@
         const img = new Image();
         img.onload = ()=>{
           try{
-            const MAX_DIM = 1200;
             const canvas = document.createElement('canvas');
-            let w = img.naturalWidth, h = img.naturalHeight;
-            if(w === 0 || h === 0){
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            if(canvas.width === 0 || canvas.height === 0){
               URL.revokeObjectURL(blobUrl);
               if(isHeic) toast('⚠ HEIC detected — please export as JPEG from Photos first');
               resolve(dataUrl);
               return;
             }
-            // Resize to max 1200px on longest side
-            if(w > MAX_DIM || h > MAX_DIM){
-              if(w > h){ h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
-              else { w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
-            }
-            canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#000';
-            ctx.fillRect(0,0,w,h);
-            ctx.drawImage(img,0,0,w,h);
-            const jpeg = canvas.toDataURL('image/jpeg', 0.75);
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.drawImage(img,0,0);
+            const jpeg = canvas.toDataURL('image/jpeg', 0.92);
             URL.revokeObjectURL(blobUrl);
             resolve(jpeg.length > 5000 ? jpeg : dataUrl);
           }catch(e){
