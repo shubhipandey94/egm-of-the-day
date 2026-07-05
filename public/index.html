@@ -1482,6 +1482,8 @@
         if(mount.style.display==='none'){
           mount.style.display='block';btn.textContent='Hide steps';
           if(!annBuilderMounted){mountAnnBuilder(mount, c);annBuilderMounted=true;}
+          // resize canvas now that container is visible
+          const bc2=mount.querySelector('#annBC');if(bc2&&bc2._bResize)bc2._bResize();
         } else {
           mount.style.display='none';btn.textContent='Add steps';
         }
@@ -1950,15 +1952,22 @@
     const bctx=bc.getContext('2d');
  
     // Load image from case
-    const imgs=getImages(caseObj);
-    if(imgs.length){const im=new Image();im.onload=()=>{bImg=im;bResize();bDraw();};im.src=imgs[0];}
- 
     function bResize(){
-      const wr=container.querySelector('#annBCanvas').getBoundingClientRect();
-      bc.width=Math.floor(wr.width)||300;bc.height=parseInt(container.querySelector('#annBCanvas').style.height)||220;
+      const wrap=container.querySelector('#annBCanvas');
+      const w=wrap.offsetWidth||wrap.clientWidth||300;
+      bc.width=Math.max(w,100);bc.height=220;
+      // Load image on first valid resize
+      if(!bImg){
+        const imgs=getImages(caseObj);
+        if(imgs.length){
+          const im=new Image();
+          im.onload=()=>{bImg=im;bDraw();};
+          im.src=imgs[0];
+          return;// bDraw will be called after image loads
+        }
+      }
       bDraw();
     }
-    setTimeout(bResize,50);
  
     function bDraw(){
       const W=bc.width,H=bc.height;if(W<1||H<1)return;
@@ -2004,7 +2013,7 @@
       const sc=container.querySelector('#annBTbi');
       const sw=container.querySelector('#annBToolbar').clientWidth-16;
       const nat=tbi.scrollWidth;
-      if(nat>sw)tbi.style.transform=`scale(${Math.max(0.6,sw/nat)})`;else tbi.style.transform='scale(1)';
+      if(nat>sw)tbi.style.transform=`scale(${Math.max(0.55,sw/nat)})`;else tbi.style.transform='scale(1)';
       tbi.style.transformOrigin='left center';
     }
  
@@ -2114,6 +2123,7 @@
     };
  
     bRenderList();bBuildTb();bDraw();
+    bc._bDraw=bDraw;bc._bResize=bResize;// expose for post-mount resize
   }
  
 </script>
