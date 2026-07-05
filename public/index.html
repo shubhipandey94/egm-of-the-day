@@ -682,11 +682,15 @@
       </div>
       <p class="prompt-title">${escapeHtml(c.title)}</p>
       ${optionsHtml}
-      ${(!hasOptions) ? `
+      ${(!hasOptions) ? (c._freeGuess ? `
         <div class="free-text">
-          <textarea id="freeGuess" placeholder="Your read — mechanism, key findings...">${c._freeGuess||''}</textarea>
+          <div style="background:rgba(79,182,168,0.08);border:1px solid var(--teal);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px;white-space:pre-wrap;">${escapeHtml(c._freeGuess)}</div>
+          <div style="font-size:11px;color:var(--teal);letter-spacing:.5px;text-transform:uppercase;">✓ Answer submitted</div>
+        </div>` : `
+        <div class="free-text">
+          <textarea id="freeGuess" placeholder="Your read — mechanism, key findings..."></textarea>
           <button id="freeSubmit">Lock in guess</button>
-        </div>` : ''}
+        </div>`) : ''}
       ${revealBtnHtml}
       <div id="interpBlock"></div>
       <div id="diffBlock"></div>
