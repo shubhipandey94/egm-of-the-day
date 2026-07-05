@@ -975,7 +975,7 @@
       </div>
       <div class="form-block" id="pImagesBlock">
         <label>EGM tracing</label>
-        <div id="pImagesPlaceholder"></div>
+        
         <div class="hint">Upload one or more images — screenshot or photo of the tracing, ladder diagram, etc.</div>
       </div>
       <div class="form-block">
@@ -1002,7 +1002,7 @@
       </div>
       <div class="form-block" id="pInterpImagesBlock">
         <label>Interpretation images (optional)</label>
-        <div id="pInterpImagesPlaceholder"></div>
+        
         <div class="hint">Upload annotated tracing, ladder diagram, etc. — multiple images allowed.</div>
       </div>
       <div class="form-block" style="display:none;">
@@ -1048,17 +1048,9 @@
     let imageData = [];
     let interpImageData = [];
  
-    function renderPImages(){
-      el.querySelector('#pImagesPlaceholder').outerHTML = buildImageZone('pImagesWrap', imageData);
-      wireImageZone(el.querySelector('#pImagesBlock'), imageData, (imgs)=>{ imageData=imgs; renderPImages(); });
-    }
-    renderPImages();
+    mountImageZone(el.querySelector('#pImagesBlock'), imageData, (imgs)=>{ imageData=imgs; });
  
-    function renderPInterpImages(){
-      el.querySelector('#pInterpImagesPlaceholder').outerHTML = buildImageZone('pInterpImagesWrap', interpImageData);
-      wireImageZone(el.querySelector('#pInterpImagesBlock'), interpImageData, (imgs)=>{ interpImageData=imgs; renderPInterpImages(); });
-    }
-    renderPInterpImages();
+    mountImageZone(el.querySelector('#pInterpImagesBlock'), interpImageData, (imgs)=>{ interpImageData=imgs; });
  
     function buildCaseFromForm(status){
       const title = el.querySelector('#pTitle').value.trim();
@@ -1216,7 +1208,7 @@
             <input type="date" id="dDate" value="${c.date}">
           </div>
           <div class="form-block" id="dImagesBlock"><label>EGM tracing</label>
-            <div id="dImagesPlaceholder"></div>
+            
           </div>
           <div class="form-block"><label>Caption (optional)</label>
             <input type="text" id="dCaption" value="${escapeHtml(c.caption||'')}">
@@ -1235,7 +1227,7 @@
             <textarea id="dText" style="min-height:120px;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n') || '')}</textarea>
           </div>
           <div class="form-block" id="dInterpImagesBlock"><label>Interpretation images (optional)</label>
-            <div id="dInterpImagesPlaceholder"></div>
+            
           </div>
           <div class="form-block"><label>Citation / source (optional)</label>
             <input type="text" id="dCitation" value="${escapeHtml(c.citation||'')}">
@@ -1276,17 +1268,9 @@
       let dImageData = getImages(c).slice();
       let dInterpImageData = getInterpImages(c).slice();
  
-      function renderDImages(){
-        ds.querySelector('#dImagesPlaceholder').outerHTML = buildImageZone('dImagesWrap', dImageData);
-        wireImageZone(ds.querySelector('#dImagesBlock'), dImageData, (imgs)=>{ dImageData=imgs; renderDImages(); });
-      }
-      renderDImages();
+      mountImageZone(ds.querySelector('#dImagesBlock'), dImageData, (imgs)=>{ dImageData=imgs; });
  
-      function renderDInterpImages(){
-        ds.querySelector('#dInterpImagesPlaceholder').outerHTML = buildImageZone('dInterpImagesWrap', dInterpImageData);
-        wireImageZone(ds.querySelector('#dInterpImagesBlock'), dInterpImageData, (imgs)=>{ dInterpImageData=imgs; renderDInterpImages(); });
-      }
-      renderDInterpImages();
+      mountImageZone(ds.querySelector('#dInterpImagesBlock'), dInterpImageData, (imgs)=>{ dInterpImageData=imgs; });
  
       function collectDraftEdits(status){
         const title = ds.querySelector('#dTitle').value.trim();
@@ -1406,7 +1390,7 @@
         </div>
         <div class="form-block" id="eInterpImagesBlock">
           <label>Interpretation images (optional)</label>
-          <div id="eInterpImagesPlaceholder"></div>
+          
         </div>
         <div class="form-block">
           <label>Citation / source (optional)</label>
@@ -1422,11 +1406,7 @@
       el.querySelector('#eLinksPlaceholder').outerHTML = buildLinksUI('eLinksWrap', c.links || (c.link ? [{label:'', url:c.link}] : []));
       wireLinksUI(el.querySelector('#eLinksFormBlock'));
       let eInterpImageData = getInterpImages(c).slice();
-      function renderEInterpImages(){
-        el.querySelector('#eInterpImagesPlaceholder').outerHTML = buildImageZone('eInterpImagesWrap', eInterpImageData);
-        wireImageZone(el.querySelector('#eInterpImagesBlock'), eInterpImageData, (imgs)=>{ eInterpImageData=imgs; renderEInterpImages(); });
-      }
-      renderEInterpImages();
+      mountImageZone(el.querySelector('#eInterpImagesBlock'), eInterpImageData, (imgs)=>{ eInterpImageData=imgs; });
       el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
         c.interpDate = el.querySelector('#eInterpDate').value;
         c.interp = {
@@ -1508,41 +1488,49 @@
   function getInterpImages(c){ const i=c.interp||{}; return i.images && i.images.length ? i.images : (i.image ? [i.image] : []); }
  
   // Render a multi-image upload zone
-  function buildImageZone(containerId, existingImages){
-    const imgs = existingImages||[];
-    const previews = imgs.map((src,idx)=>
-      '<div class="img-preview" data-idx="'+idx+'" style="position:relative;display:inline-block;margin:0 6px 6px 0;">'+
-      '<img src="'+src+'" style="height:80px;width:auto;border-radius:6px;border:1px solid var(--line);">'+
-      '<button class="remove-img" data-idx="'+idx+'" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:18px;text-align:center;padding:0;">✕</button>'+
-      '</div>'
-    ).join('');
-    return '<div id="'+containerId+'" style="margin-bottom:6px;">'+previews+'</div>'+
-           '<button class="add-opt add-img-btn" style="width:100%;">+ Add image</button>';
+  // Mount a multi-image upload zone into a container element.
+  // Returns a cleanup function that removes event listeners.
+  function mountImageZone(container, imagesArr, onChange){
+    function render(){
+      // Build inner HTML — previews + add button
+      const thumbs = imagesArr.map((src,idx)=>
+        '<div style="position:relative;display:inline-block;margin:0 6px 6px 0;">'+
+        '<img src="'+src+'" style="height:80px;width:auto;border-radius:6px;border:1px solid var(--line);">'+
+        '<button class="miz-rm" data-idx="'+idx+'" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>'+
+        '</div>'
+      ).join('');
+      container.innerHTML = '<div style="margin-bottom:6px;">'+thumbs+'</div>'+
+        '<button class="add-opt miz-add" style="width:100%;">+ Add image</button>';
+      // Wire remove buttons
+      container.querySelectorAll('.miz-rm').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          imagesArr.splice(parseInt(btn.dataset.idx),1);
+          onChange(imagesArr);
+          render();
+        });
+      });
+      // Wire add button
+      container.querySelector('.miz-add').addEventListener('click', ()=>{
+        const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+        inp.style.cssText='position:fixed;top:-100px;left:-100px;opacity:0;';
+        document.body.appendChild(inp);
+        inp.onchange=async e=>{
+          document.body.removeChild(inp);
+          const file=e.target.files[0];if(!file)return;
+          const jpeg=await convertToJpeg(file);
+          imagesArr.push(jpeg);
+          onChange(imagesArr);
+          render();
+        };
+        inp.click();
+      });
+    }
+    render();
   }
  
-  function wireImageZone(container, imagesArr, onUpdate){
-    container.querySelector('.add-img-btn').addEventListener('click', ()=>{
-      const inp = document.createElement('input');
-      inp.type='file';inp.accept='image/*';
-      inp.style.cssText='position:fixed;top:-100px;left:-100px;opacity:0;';
-      document.body.appendChild(inp);
-      inp.onchange = async e=>{
-        document.body.removeChild(inp);
-        const file=e.target.files[0];if(!file)return;
-        const jpeg = await convertToJpeg(file);
-        imagesArr.push(jpeg);
-        onUpdate(imagesArr);
-      };
-      inp.click();
-    });
-    container.querySelectorAll('.remove-img').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const idx=parseInt(btn.dataset.idx);
-        imagesArr.splice(idx,1);
-        onUpdate(imagesArr);
-      });
-    });
-  }
+  // Legacy stubs — kept so existing callers compile
+  function buildImageZone(){ return ''; }
+  function wireImageZone(){}
  
   function convertToJpeg(file){
     return new Promise((resolve)=>{
