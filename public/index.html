@@ -1482,8 +1482,14 @@
         if(mount.style.display==='none'){
           mount.style.display='block';btn.textContent='Hide steps';
           if(!annBuilderMounted){mountAnnBuilder(mount, c);annBuilderMounted=true;}
-          // resize canvas now that container is visible
-          const bc2=mount.querySelector('#annBC');if(bc2&&bc2._bResize)bc2._bResize();
+          // wait one frame for layout, then resize + load image
+          requestAnimationFrame(()=>{
+            const bc2=mount.querySelector('#annBC');
+            if(bc2){
+              if(bc2._bResize)bc2._bResize();
+              if(bc2._bLoadImg)bc2._bLoadImg();
+            }
+          });
         } else {
           mount.style.display='none';btn.textContent='Add steps';
         }
@@ -1494,6 +1500,10 @@
         const btn = el.querySelector('#annToggleBtn');
         mount.style.display='block';btn.textContent='Hide steps';
         mountAnnBuilder(mount, c);annBuilderMounted=true;
+        requestAnimationFrame(()=>{
+          const bc2=mount.querySelector('#annBC');
+          if(bc2){if(bc2._bResize)bc2._bResize();if(bc2._bLoadImg)bc2._bLoadImg();}
+        });
       }
  
       el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
@@ -1925,11 +1935,19 @@
     let bFinalText=caseObj.finalText||'';
     let bInFinal=false;
     let bTool='arrow',bCol=COLS[0],bDrag=null,bPlacing=null,bUndo=[];
+    let bScale=caseObj.scale||null,bScaleMode=false,bScaleCal=null;
     let bIdn=1000;
  
     container.innerHTML=`
       <div id="annBuilder">
         <div id="annBToolbar"><div id="annBTbi"></div></div>
+        <div id="annBScaleBar" style="display:none;background:#171f2b;border-bottom:1px solid #2a3544;padding:0 8px;height:28px;align-items:center;gap:6px;font-size:9px;color:#9aa3b0;">
+          <span>Drag caliper across known interval →</span>
+          <input id="annBMsIn" type="number" value="200" min="1" max="10000" style="background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 4px;border-radius:4px;font-size:9px;width:44px;outline:none;height:18px;">
+          <span>ms</span>
+          <button class="abtb" id="annBSetSc" style="height:18px;padding:0 6px;">Set</button>
+          <button class="abtb" id="annBCanSc" style="height:18px;padding:0 6px;">Cancel</button>
+        </div>
         <div id="annBCanvas"><canvas id="annBC" tabindex="0"></canvas></div>
         <div id="annBSteps">
           <div id="annBStepList"></div>
@@ -1954,22 +1972,21 @@
     // Load image from case
     function bResize(){
       const wrap=container.querySelector('#annBCanvas');
-      const w=wrap.offsetWidth||wrap.clientWidth||0;
-      if(w<10){
-        // container not visible yet — retry shortly
-        setTimeout(bResize,100);return;
-      }
-      bc.width=w;bc.height=240;
-      if(!bImg){
-        const imgs=getImages(caseObj);
-        if(imgs.length){
-          const im=new Image();
-          im.onload=()=>{bImg=im;bDraw();};
-          im.src=imgs[0];
-          return;
-        }
+      const w=wrap.getBoundingClientRect().width||wrap.offsetWidth||0;
+      if(w>10){
+        bc.width=Math.floor(w);bc.height=240;
       }
       bDraw();
+    }
+ 
+    // Load image immediately — don't wait for resize
+    function bLoadCaseImage(){
+      const imgs=getImages(caseObj);
+      if(imgs.length && !bImg){
+        const im=new Image();
+        im.onload=()=>{bImg=im;bResize();bDraw();};
+        im.src=imgs[0];
+      }
     }
  
     function bDraw(){
@@ -1984,7 +2001,36 @@
       } else {
         bActiveAnn.forEach(a=>{try{annDraw(bctx,a,a.id===bSel,bIR);}catch(e){}});
         if(bPlacing)try{annDraw(bctx,bPlacing,false,bIR);}catch(e){}
+        // draw scale caliper if in scale mode
+        if(bScaleMode&&bScaleCal){
+          bctx.save();bctx.globalAlpha=0.8;bctx.setLineDash([6,4]);bctx.strokeStyle='#e8a23d';bctx.lineWidth=1.5;
+          const sx1=annPx(bScaleCal.x1,bIR,'x'),sx2=annPx(bScaleCal.x2||bScaleCal.x1,bIR,'x'),sby=annPx(bScaleCal.by||0.5,bIR,'y');
+          bctx.beginPath();bctx.moveTo(sx1,bIR.y);bctx.lineTo(sx1,bIR.y+bIR.h);bctx.stroke();
+          if(Math.abs(sx2-sx1)>2){bctx.beginPath();bctx.moveTo(sx2,bIR.y);bctx.lineTo(sx2,bIR.y+bIR.h);bctx.stroke();}
+          bctx.beginPath();bctx.moveTo(sx1,sby);bctx.lineTo(sx2,sby);bctx.stroke();
+          bctx.setLineDash([]);bctx.restore();
+        }
       }
+    }
+ 
+    function bWireScaleBar(){
+      const setBtn=container.querySelector('#annBSetSc');
+      const canBtn=container.querySelector('#annBCanSc');
+      if(setBtn) setBtn.onclick=()=>{
+        if(!bScaleCal||Math.abs((bScaleCal.x2||0)-bScaleCal.x1)*bIR.w<2){toast('Place scale caliper on canvas first');return;}
+        const ms=parseFloat(container.querySelector('#annBMsIn').value);if(!ms||ms<=0)return;
+        bScale=Math.abs(bScaleCal.x2-bScaleCal.x1)*bIR.w/ms;
+        caseObj.scale=bScale;// save to case
+        bScaleMode=false;bScaleCal=null;
+        container.querySelector('#annBScaleBar').style.display='none';
+        toast('Scale set: '+Math.round(ms)+'ms interval calibrated');
+        bBuildTb();bDraw();
+      };
+      if(canBtn) canBtn.onclick=()=>{
+        bScaleMode=false;bScaleCal=null;
+        container.querySelector('#annBScaleBar').style.display='none';
+        bBuildTb();bDraw();
+      };
     }
  
     function bLoadImageFile(){
@@ -2020,6 +2066,12 @@
         const cl=b('Clear','red');cl.onclick=()=>{bPushU();bActiveAnn=[];bSteps[bCurI].ann=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
         tbi.appendChild(sep());
         const li=b('Load image');li.onclick=bLoadImageFile;tbi.appendChild(li);
+        const scBtn=b('Scale');if(bScaleMode)scBtn.classList.add('on');
+        scBtn.onclick=()=>{
+          bScaleMode=!bScaleMode;bScaleCal=null;
+          container.querySelector('#annBScaleBar').style.display=bScaleMode?'flex':'none';
+          bBuildTb();bc.focus();
+        };tbi.appendChild(scBtn);
       } else {
         drawTools();
         const u=b('Undo');u.onclick=()=>{if(bUndo.length){bActiveAnn=bUndo.pop();bFinalAnn=bActiveAnn;bSel=null;bDraw();}bc.focus();};tbi.appendChild(u);
@@ -2056,6 +2108,18 @@
       e.preventDefault();bc.focus();
       const{x,y}=bGP(e);const R=bIR;
       const fx=(x-R.x)/R.w,fy=(y-R.y)/R.h;
+      // scale caliper mode
+      if(bScaleMode){
+        if(!bScaleCal){bScaleCal={x1:fx,x2:fx,by:fy};bDrag={t:'sc',p:'r',sx:x,sy:y,ox1:fx,ox2:fx,oby:fy};}
+        else{
+          const R2=bIR;
+          const scx1=annPx(bScaleCal.x1,R2,'x'),scx2=annPx(bScaleCal.x2||bScaleCal.x1,R2,'x'),scby=annPx(bScaleCal.by||0.5,R2,'y');
+          if(Math.abs(x-scx1)<14)bDrag={t:'sc',p:'l',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
+          else if(Math.abs(x-scx2)<14)bDrag={t:'sc',p:'r',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
+          else bDrag={t:'sc',p:'bar',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
+        }
+        bDraw();return;
+      }
       const hit=bHit(x,y);
       if(hit){bSel=hit.id;const a=bActiveAnn.find(a=>a.id===hit.id);bDrag={t:'ed',id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2,oy1:a.y1,oy2:a.y2,otx:a.tx,oty:a.ty,oby:a.barY||0.5};}
       else{bSel=null;if(bTool==='arrow'){bPlacing={t:'arrow',id:'p',tx:fx,ty:fy,x1:fx,y1:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}else if(bTool==='circle'){bPlacing={t:'circ',id:'p',x1:fx,y1:fy,x2:fx,y2:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}else if(bTool==='cal'){bPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y,ox2:fx};}}
@@ -2064,6 +2128,12 @@
     function bPM(e){
       e.preventDefault();const{x,y}=bGP(e);if(!bDrag)return;
       const R=bIR,dfx=(x-bDrag.sx)/R.w,dfy=(y-bDrag.sy)/R.h,cy=v=>Math.max(0,Math.min(1,v));
+      if(bDrag.t==='sc'&&bScaleCal){
+        if(bDrag.p==='r'){bScaleCal.x2=bDrag.ox2+dfx;bScaleCal.by=cy(bDrag.oby+dfy);}
+        else if(bDrag.p==='l')bScaleCal.x1=bDrag.ox1+dfx;
+        else if(bDrag.p==='bar'){bScaleCal.by=cy(bDrag.oby+dfy);bScaleCal.x1=bDrag.ox1+dfx;bScaleCal.x2=bDrag.ox2+dfx;}
+        bDraw();return;
+      }
       if(bDrag.t==='pl'&&bPlacing){
         const fx=(x-R.x)/R.w,fy=(y-R.y)/R.h;
         if(bPlacing.t==='arrow'){bPlacing.x1=fx;bPlacing.y1=fy;}else if(bPlacing.t==='circ'){bPlacing.x2=fx;bPlacing.y2=fy;}else if(bPlacing.t==='cal'){bPlacing.x2=bDrag.ox2+dfx;bPlacing.barY=cy((bDrag.sy-R.y)/R.h+dfy);}
@@ -2139,8 +2209,8 @@
       return{annotationSteps:bSteps,finalAnn:bFinalAnn,finalText:container.querySelector('#annFinalTxt').value};
     };
  
-    bRenderList();bBuildTb();bDraw();
-    bc._bDraw=bDraw;bc._bResize=bResize;// expose for post-mount resize
+    bRenderList();bBuildTb();bDraw();bWireScaleBar();
+    bc._bDraw=bDraw;bc._bResize=bResize;bc._bLoadImg=bLoadCaseImage;// expose for post-mount resize
   }
  
 </script>
