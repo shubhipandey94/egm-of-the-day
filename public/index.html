@@ -106,55 +106,6 @@
   .guess-opt.correct{border-color:var(--teal); background:rgba(79,182,168,0.08);}
   .guess-opt.correct .letter{border-color:var(--teal); color:var(--teal);}
   .guess-opt.incorrect{border-color:var(--red); background:rgba(217,104,95,0.07); opacity:0.75;}
-  /* Annotation viewer overlay */
-  #annOverlay{position:fixed;inset:0;background:#050810;z-index:1000;display:none;flex-direction:column;}
-  #annOverlay.show{display:flex;}
-  #annCanvasWrap{flex:1;position:relative;overflow:hidden;background:#050810;}
-  #annCanvasWrap canvas{position:absolute;top:0;left:0;}
-  #annBottom{background:#10161f;border-top:1px solid #2a3544;padding:10px 14px;flex-shrink:0;}
-  #annDesc{font-size:13px;color:#e8e6df;line-height:1.6;margin-bottom:8px;min-height:28px;}
-  #annFinalText{font-size:13px;color:#e8e6df;line-height:1.6;margin-bottom:8px;white-space:pre-wrap;display:none;}
-  #annNav{display:flex;align-items:center;gap:10px;}
-  #annProg{font-size:11px;color:#9aa3b0;flex:1;text-align:center;}
-  .ann-nb{background:#171f2b;color:#e8e6df;border:1px solid #2a3544;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
-  .ann-nb:hover{border-color:#e8a23d;color:#e8a23d;}
-  .ann-nb:disabled{opacity:.3;cursor:default;pointer-events:none;}
-  .ann-nb.primary{background:#e8a23d;color:#0a0e14;border-color:#e8a23d;}
-  .ann-nb.primary:hover{background:#d4912e;}
-  /* Annotation builder in edit form */
-  #annBuilder{border:1px solid #2a3544;border-radius:8px;overflow:hidden;margin-top:8px;}
-  #annBToolbar{background:#10161f;padding:0 8px;height:34px;display:flex;align-items:center;gap:4px;overflow:hidden;flex-shrink:0;border-bottom:1px solid #2a3544;}
-  #annBTbi{display:flex;align-items:center;gap:3px;transform-origin:left center;white-space:nowrap;}
-  .abtb{background:transparent;border:1px solid #2a3544;color:#9aa3b0;padding:0 7px;height:22px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;letter-spacing:.4px;text-transform:uppercase;outline:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0;}
-  .abtb:hover{border-color:#e8a23d;color:#e8a23d;}
-  .abtb.on{border-color:#e8a23d;color:#e8a23d;background:rgba(232,162,61,0.07);}
-  .abtb.red{color:#d9685f;}.abtb.red:hover{border-color:#d9685f;}
-  .abtb.grn{color:#4fb6a8;border-color:#4fb6a8;}
-  .absep{width:1px;height:14px;background:#2a3544;margin:0 1px;display:inline-block;flex-shrink:0;}
-  .abdot{width:10px;height:10px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;display:inline-block;}
-  .abdot.on{border-color:#fff;}
-  #annBCanvas{position:relative;overflow:hidden;background:#050810;height:220px;}
-  #annBCanvas canvas{position:absolute;top:0;left:0;touch-action:none;outline:none;}
-  #annBSteps{border-top:1px solid #2a3544;}
-  #annBStepList{max-height:130px;overflow-y:auto;padding:4px;}
-  .abs-item{background:#171f2b;border:1px solid #2a3544;border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:9.5px;}
-  .abs-item.on{border-color:#e8a23d;}
-  .abs-item .abs-n{font-size:8px;color:#e8a23d;text-transform:uppercase;margin-bottom:1px;}
-  .abs-item .abs-d{color:#9aa3b0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .abs-item .abs-btns{display:flex;gap:2px;margin-top:3px;}
-  .abs-btn{background:transparent;border:1px solid #2a3544;color:#9aa3b0;padding:0 4px;height:14px;border-radius:3px;cursor:pointer;font-size:7.5px;font-family:inherit;text-transform:uppercase;outline:none;flex:1;}
-  .abs-btn:hover{border-color:#e8a23d;color:#e8a23d;}
-  .abs-btn.r{color:#d9685f;}.abs-btn.r:hover{border-color:#d9685f;}
-  #annBForm{padding:6px;border-top:1px solid #2a3544;display:flex;flex-direction:column;gap:4px;}
-  #annBDesc{width:100%;background:#0a0e14;border:1px solid #2a3544;border-radius:4px;color:#e8e6df;padding:4px 6px;font-size:9.5px;font-family:inherit;resize:none;min-height:36px;outline:none;}
-  #annBDesc:focus{border-color:#e8a23d;}
-  .abs-save-row{display:flex;gap:4px;}
-  .abs-save-btn{flex:1;background:rgba(232,162,61,0.12);border:1px solid #e8a23d;color:#e8a23d;padding:3px;border-radius:4px;cursor:pointer;font-size:8.5px;font-family:inherit;text-transform:uppercase;}
-  .abs-new-btn{flex:1;background:transparent;border:1px solid #2a3544;color:#9aa3b0;padding:3px;border-radius:4px;cursor:pointer;font-size:8.5px;font-family:inherit;text-transform:uppercase;}
-  .abs-new-btn:hover{border-color:#e8a23d;color:#e8a23d;}
-  #annFinalSection{padding:6px;border-top:1px solid #2a3544;}
-  #annFinalTxt{width:100%;background:#0a0e14;border:1px solid #2a3544;border-radius:4px;color:#e8e6df;padding:4px 6px;font-size:9.5px;font-family:inherit;resize:none;min-height:44px;outline:none;}
-  #annFinalTxt:focus{border-color:#e8a23d;}
   .guess-opt.incorrect .letter{border-color:var(--red); color:var(--red);}
   .guess-opt.pending{border-color:var(--amber); background:rgba(232,162,61,0.08);}
   .guess-opt.pending .letter{border-color:var(--amber); color:var(--amber);}
@@ -285,6 +236,40 @@
   @media (prefers-reduced-motion: reduce){
     *{animation:none !important; transition:none !important;}
   }
+ 
+  #annBuilder{border:1px solid #2a3544;border-radius:8px;overflow:hidden;margin-top:8px;}
+  #annBToolbar{background:#10161f;padding:0 8px;height:34px;display:flex;align-items:center;overflow:hidden;flex-shrink:0;border-bottom:1px solid #2a3544;}
+  #annBTbi{display:flex;align-items:center;gap:3px;transform-origin:left center;white-space:nowrap;}
+  .abtb{background:transparent;border:1px solid #2a3544;color:#9aa3b0;padding:0 7px;height:22px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;letter-spacing:.4px;text-transform:uppercase;outline:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0;}
+  .abtb:hover{border-color:#e8a23d;color:#e8a23d;}
+  .abtb.on{border-color:#e8a23d;color:#e8a23d;background:rgba(232,162,61,0.07);}
+  .abtb.red{color:#d9685f;}.abtb.red:hover{border-color:#d9685f;}
+  .abtb.grn{color:#4fb6a8;border-color:#4fb6a8;}
+  .absep{width:1px;height:14px;background:#2a3544;margin:0 1px;display:inline-block;flex-shrink:0;}
+  .abdot{width:10px;height:10px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;display:inline-block;}
+  .abdot.on{border-color:#fff;}
+  #annBCanvas{position:relative;overflow:hidden;background:#050810;height:240px;}
+  #annBCanvas canvas{position:absolute;top:0;left:0;touch-action:none;outline:none;}
+  #annBStepList{max-height:130px;overflow-y:auto;padding:4px;}
+  .abs-item{background:#171f2b;border:1px solid #2a3544;border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:9.5px;}
+  .abs-item.on{border-color:#e8a23d;}
+  .abs-n{font-size:8px;color:#e8a23d;text-transform:uppercase;margin-bottom:1px;}
+  .abs-d{color:#9aa3b0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .abs-btns{display:flex;gap:2px;margin-top:3px;}
+  .abs-btn{background:transparent;border:1px solid #2a3544;color:#9aa3b0;padding:0 4px;height:14px;border-radius:3px;cursor:pointer;font-size:7.5px;font-family:inherit;text-transform:uppercase;outline:none;flex:1;}
+  .abs-btn:hover{border-color:#e8a23d;color:#e8a23d;}
+  .abs-btn.r{color:#d9685f;}
+  #annBForm{padding:6px;border-top:1px solid #2a3544;}
+  #annBDesc{width:100%;background:#0a0e14;border:1px solid #2a3544;border-radius:4px;color:#e8e6df;padding:4px 6px;font-size:9.5px;font-family:inherit;resize:none;min-height:36px;outline:none;}
+  #annBDesc:focus{border-color:#e8a23d;}
+  .abs-save-row{display:flex;gap:4px;margin-top:4px;}
+  .abs-save-btn{flex:1;background:rgba(232,162,61,0.12);border:1px solid #e8a23d;color:#e8a23d;padding:3px;border-radius:4px;cursor:pointer;font-size:8.5px;font-family:inherit;text-transform:uppercase;}
+  .abs-new-btn{flex:1;background:transparent;border:1px solid #2a3544;color:#9aa3b0;padding:3px;border-radius:4px;cursor:pointer;font-size:8.5px;font-family:inherit;text-transform:uppercase;}
+  .abs-new-btn:hover{border-color:#e8a23d;color:#e8a23d;}
+  #annFinalSection{padding:6px;border-top:1px solid #2a3544;}
+  #annFinalTxt{width:100%;background:#0a0e14;border:1px solid #2a3544;border-radius:4px;color:#e8e6df;padding:4px 6px;font-size:9.5px;font-family:inherit;resize:none;min-height:44px;outline:none;}
+  #annFinalTxt:focus{border-color:#e8a23d;}
+  #annBScaleBar{display:none;background:#171f2b;border-bottom:1px solid #2a3544;padding:0 8px;height:28px;align-items:center;gap:6px;font-size:9px;color:#9aa3b0;}
 </style>
 </head>
 <body class="scope">
@@ -324,10 +309,10 @@
  
 <script>
 (function(){
-  const STORAGE_CASES_KEY = 'egm:cases-index'; // legacy key — kept for migration
-  const STORAGE_IDS_KEY = 'egm:cases-ids';    // new: just the list of IDs
+  const STORAGE_CASES_KEY = 'egm:cases-index'; // legacy
+  const STORAGE_IDS_KEY = 'egm:cases-ids';
   const STORAGE_PASSCODE_KEY = 'egm:post-passcode';
-  const SHARED = true;
+  const SHARED = true; // all case + comment data is shared across the group
   let userName = '';
   let postPasscode = null; // null = no passcode set yet (open posting)
   let postUnlocked = false; // unlocked for this session once correct code entered
@@ -480,7 +465,6 @@
   // ---------- storage ----------
   async function loadCases(){
     try{
-      // Try new per-case format first
       const idsRes = await window.storage.get(STORAGE_IDS_KEY, SHARED);
       if(idsRes && idsRes.value){
         const ids = JSON.parse(idsRes.value);
@@ -493,74 +477,59 @@
         }
         cases = loaded;
       } else {
-        // Fall back to legacy single-blob format and migrate
         const res = await window.storage.get(STORAGE_CASES_KEY, SHARED);
         if(res && res.value){
           cases = JSON.parse(res.value);
-          // Migrate to per-case format immediately
-          console.log('[migrate] migrating', cases.length, 'cases to per-case storage');
+          console.log('[migrate] migrating', cases.length, 'cases');
           await saveCases();
-          // Delete old blob after successful migration
           try{ await window.storage.delete(STORAGE_CASES_KEY, SHARED); }catch(e){}
-          console.log('[migrate] migration complete');
-        } else {
-          cases = [];
-        }
+        } else { cases = []; }
       }
-    }catch(e){
-      console.error('[loadCases] error:', e);
-      cases = [];
-    }
+    }catch(e){ cases = []; }
     cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
   }
   async function saveCases(){
     try{
-      // Save each case individually — avoids D1 1MB row limit
-      const ids = cases.map(c => c.id);
+      const ids = cases.map(c=>c.id);
       const idsR = await window.storage.set(STORAGE_IDS_KEY, JSON.stringify(ids), SHARED);
       if(!idsR){ toast('Save failed — try again'); return false; }
       let failed = 0;
-      for(const c of cases){
+      for(const cas of cases){
         try{
-          const r = await window.storage.set('egm:case:' + c.id, JSON.stringify(c), SHARED);
+          const r = await window.storage.set('egm:case:' + cas.id, JSON.stringify(cas), SHARED);
           if(!r) failed++;
-        }catch(e){ failed++; console.error('[saveCases] case save error:', e); }
+        }catch(e){ failed++; }
       }
-      if(failed > 0){ toast('Save failed for ' + failed + ' case(s) — try again'); return false; }
-      // Clean up deleted cases from DB
+      if(failed > 0){ toast('Save failed for ' + failed + ' case(s)'); return false; }
       try{
         const allKeys = await window.storage.list('egm:case:', SHARED);
         if(allKeys && allKeys.keys){
-          const currentIds = new Set(ids);
+          const cur = new Set(ids);
           for(const key of allKeys.keys){
-            const id = key.replace('egm:case:', '');
-            if(!currentIds.has(id)) await window.storage.delete(key, SHARED);
+            const id = key.replace('egm:case:','');
+            if(!cur.has(id)) await window.storage.delete(key, SHARED);
           }
         }
       }catch(e){}
       return true;
-    }catch(e){
-      console.error('[saveCases] error:', e);
-      toast('Save failed — try again');
-      return false;
-    }
+    }catch(e){ toast('Save failed — try again'); return false; }
   }
  
   function promptBackup(){
-    const payload = {exportedAt:new Date().toISOString(),app:'EGM of the Day',caseCount:cases.length,cases};
-    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const stamp = todayStr();
-    const t = document.createElement('div');
+    const payload={exportedAt:new Date().toISOString(),app:'EGM of the Day',caseCount:cases.length,cases};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const stamp=todayStr();
+    const t=document.createElement('div');
     t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#171f2b;border:1px solid #4fb6a8;color:#e8e6df;padding:10px 16px;border-radius:8px;font-size:11px;z-index:9999;display:flex;gap:10px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.5);';
     t.innerHTML='<span>Saved ✓ — download a backup?</span>';
-    const btn = document.createElement('a');
+    const btn=document.createElement('a');
     btn.href=url;btn.download='egm-backup-'+stamp+'.json';
-    btn.style.cssText='background:#4fb6a8;color:#0a0e14;padding:4px 10px;border-radius:5px;font-size:10px;text-decoration:none;font-weight:700;text-transform:uppercase;letter-spacing:.5px;';
+    btn.style.cssText='background:#4fb6a8;color:#0a0e14;padding:4px 10px;border-radius:5px;font-size:10px;text-decoration:none;font-weight:700;text-transform:uppercase;';
     btn.textContent='Download';
-    const skip = document.createElement('button');
-    skip.textContent='✕';
-    skip.style.cssText='background:transparent;border:none;color:#9aa3b0;cursor:pointer;font-size:14px;padding:0 2px;';
+    const skip=document.createElement('button');
+    skip.textContent='×';
+    skip.style.cssText='background:transparent;border:none;color:#9aa3b0;cursor:pointer;font-size:14px;';
     skip.onclick=()=>{document.body.removeChild(t);URL.revokeObjectURL(url);};
     btn.onclick=()=>setTimeout(()=>{if(document.body.contains(t))document.body.removeChild(t);URL.revokeObjectURL(url);},500);
     t.appendChild(btn);t.appendChild(skip);
@@ -729,6 +698,7 @@
         ${getImages(c).map(src=>`<img src="${src}" alt="EGM tracing" style="display:block;width:100%;margin-bottom:8px;">`).join('')}
         ${c.caption ? `<div class="caption">${escapeHtml(c.caption)}</div>` : ''}
       </div>
+      ${c.scale && getImages(c).length ? `<div id="caliperBtnWrap" style="margin:0 0 12px;"><button id="openCaliperBtn" class="add-opt" style="width:100%;font-size:11px;">Use calipers</button></div><div id="caliperOverlay" style="display:none;margin-bottom:12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#050810;"><div id="caliperCanvasWrap" style="position:relative;height:260px;"><canvas id="caliperCV" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;"></canvas></div><div style="padding:6px 10px;background:#10161f;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:10px;color:#9aa3b0;"><button class="add-opt" id="calUndoBtn">Undo</button><button class="add-opt" id="calClearBtn">Clear</button><span id="calStatus" style="flex:1;text-align:right;color:var(--amber);"></span></div></div>` : ''}
       <p class="prompt-title">${escapeHtml(c.title)}</p>
       ${optionsHtml}
       ${(!hasOptions) ? (c._freeGuess ? `
@@ -811,6 +781,75 @@
     renderInterp();
     renderDiff();
  
+    const openCaliperBtn=el.querySelector('#openCaliperBtn');
+    if(openCaliperBtn && c.scale && getImages(c).length){
+      const overlay=el.querySelector('#caliperOverlay');
+      let calMounted=false, calAnns=[], calUndo2=[];
+      openCaliperBtn.addEventListener('click',()=>{
+        if(overlay.style.display==='none'){
+          overlay.style.display='block'; openCaliperBtn.textContent='Hide calipers';
+          if(!calMounted){
+            calMounted=true;
+            const cv2=el.querySelector('#caliperCV'), ctx2=cv2.getContext('2d');
+            let calImg=null, calIR={x:0,y:0,w:1,h:1}, calDrag=null, calPlacing=null, calSel=null, calIdn=5000;
+            function calResize(){ const wrap=el.querySelector('#caliperCanvasWrap'); const w=Math.floor(wrap.getBoundingClientRect().width||wrap.offsetWidth||0); if(w>20){cv2.width=w;cv2.height=260;} calDraw(); }
+            function calDraw(){
+              const W=cv2.width,H=cv2.height; if(!W||!H)return;
+              ctx2.clearRect(0,0,W,H); ctx2.fillStyle='#050810'; ctx2.fillRect(0,0,W,H);
+              calIR=annImgRect(calImg,W,H);
+              if(calImg){try{ctx2.drawImage(calImg,calIR.x,calIR.y,calIR.w,calIR.h);}catch(e){}}
+              calAnns.forEach(a=>{try{annDraw(ctx2,a,a.id===calSel,calIR);}catch(e){}});
+              if(calPlacing)try{annDraw(ctx2,calPlacing,false,calIR);}catch(e){}
+            }
+            function calGP(e){const r=cv2.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
+            cv2.addEventListener('mousedown',e=>{
+              e.preventDefault(); cv2.focus();
+              const{x,y}=calGP(e); const R=calIR;
+              const fx=(x-R.x)/R.w, fy=(y-R.y)/R.h;
+              let hit=null;
+              for(let i=calAnns.length-1;i>=0;i--){const a=calAnns[i];const cx1=annPx(a.x1,R,'x'),cx2=annPx(a.x2||a.x1,R,'x'),by=annPx(a.barY||0.5,R,'y');if(Math.abs(x-cx1)<14)hit={id:a.id,p:'l'};else if(Math.abs(x-cx2)<14)hit={id:a.id,p:'r'};else if(x>=Math.min(cx1,cx2)-4&&x<=Math.max(cx1,cx2)+4&&Math.abs(y-by)<16)hit={id:a.id,p:'bar'};if(hit)break;}
+              if(hit){calSel=hit.id;const a=calAnns.find(a=>a.id===hit.id);calDrag={id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2||a.x1,oby:a.barY||0.5};}
+              else{calSel=null;calPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:ANN_COLS[0]};calDrag={t:'pl',sx:x,sy:y,ox2:fx};}
+              calDraw();
+            });
+            cv2.addEventListener('mousemove',e=>{
+              if(!calDrag)return; const{x,y}=calGP(e); const R=calIR;
+              const dfx=(x-calDrag.sx)/R.w, dfy=(y-calDrag.sy)/R.h, cy=v=>Math.max(0,Math.min(1,v));
+              if(calDrag.t==='pl'&&calPlacing){calPlacing.x2=calDrag.ox2+dfx;calPlacing.barY=cy((calDrag.sy-R.y)/R.h+dfy);}
+              else if(calDrag.id){const a=calAnns.find(a=>a.id===calDrag.id);if(a){
+                if(calDrag.p==='l')a.x1=calDrag.ox1+dfx;
+                else if(calDrag.p==='r'){a.x2=calDrag.ox2+dfx;a.barY=cy(calDrag.oby+dfy);}
+                else{a.barY=cy(calDrag.oby+dfy);a.x1=calDrag.ox1+dfx;a.x2=calDrag.ox2+dfx;}
+                const pxW=Math.abs(annPx(a.x2,calIR,'x')-annPx(a.x1,calIR,'x'));
+                el.querySelector('#calStatus').textContent=Math.round(pxW/c.scale)+'ms';
+              }}
+              calDraw();
+            });
+            cv2.addEventListener('mouseup',()=>{
+              if(calDrag&&calDrag.t==='pl'&&calPlacing){
+                const R=calIR;
+                if(Math.abs((calPlacing.x2-calPlacing.x1)*R.w)>5){
+                  calUndo2.push(JSON.parse(JSON.stringify(calAnns)));
+                  const a={...calPlacing,id:calIdn++};
+                  a.lbl=Math.round(Math.abs((a.x2-a.x1)*R.w)/c.scale)+'ms';
+                  calAnns.push(a); calSel=a.id;
+                }
+                calPlacing=null;
+              }
+              calDrag=null; calDraw();
+            });
+            el.querySelector('#calUndoBtn').addEventListener('click',()=>{if(calUndo2.length){calAnns=calUndo2.pop();calSel=null;calDraw();}});
+            el.querySelector('#calClearBtn').addEventListener('click',()=>{calUndo2.push(JSON.parse(JSON.stringify(calAnns)));calAnns=[];calSel=null;calDraw();});
+            requestAnimationFrame(()=>requestAnimationFrame(()=>{
+              calResize();
+              const imgs=getImages(c);
+              if(imgs.length){const im=new Image();im.onload=()=>{calImg=im;calResize();};im.src=imgs[0];}
+            }));
+          }
+        } else { overlay.style.display='none'; openCaliperBtn.textContent='Use calipers'; }
+      });
+    }
+ 
     if(available){
       const revealBtn = el.querySelector('#revealBtn');
       if(revealBtn) revealBtn.addEventListener('click', ()=>{
@@ -835,12 +874,9 @@
     function renderInterp(){
       const block = el.querySelector('#interpBlock');
       if(!available || !c._revealed){ block.innerHTML=''; renderDiff(); return; }
-      // If annotation steps exist — launch step-by-step viewer automatically
       if(c.annotationSteps && c.annotationSteps.length && c.annotationSteps.some(s=>s.ann&&s.ann.length)){
-        block.innerHTML='<div style="padding:8px 0;"><div style="font-size:11px;color:var(--teal);letter-spacing:.5px;">Annotation walkthrough launched →</div></div>';
-        startAnnViewer(c);
-        renderDiff();
-        return;
+        block.innerHTML='<div style="padding:8px 0;"><div style="font-size:11px;color:var(--teal);">Annotation walkthrough launched →</div></div>';
+        startAnnViewer(c); renderDiff(); return;
       }
       const i = c.interp || {};
       const hasInterpContent = !!(i.text || i.mechanism || i.evidence || i.management || i.image || (i.images && i.images.length));
@@ -848,7 +884,7 @@
       block.innerHTML = `
         <div class="interp">
           ${(i.text || i.mechanism || i.evidence || i.management) ? `<p style="white-space:pre-wrap;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n'))}</p>` : ''}
-          ${getInterpImages(c).map(src=>`<div style="margin:0 0 12px; border:1px solid var(--line); border-radius:8px; overflow:hidden;"><img src="${src}" style="display:block; width:100%; height:auto;" alt="Interpretation tracing"></div>`).join('')}
+          ${getInterpImages(c).map(src=>`<div style="margin:0 0 12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;"><img src="${src}" style="display:block;width:100%;height:auto;" alt="Interpretation tracing"></div>`).join('')}
           ${(()=>{
             const links = c.links || (c.link ? [{label:'', url:c.link}] : []);
             const linksHtml = links.filter(l=>l.url).map(l=>
@@ -1035,8 +1071,27 @@
       </div>
       <div class="form-block" id="pImagesBlock">
         <label>EGM tracing</label>
-        
-        <div class="hint">Upload one or more images — screenshot or photo of the tracing, ladder diagram, etc.</div>
+        <div class="hint">Upload one or more images of the tracing.</div>
+      </div>
+      <div class="form-block" style="padding:8px;background:rgba(79,182,168,0.05);border:1px solid #2a3544;border-radius:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label style="margin:0;font-size:11px;">Scale calibration (optional)</label>
+          <span id="pScaleStatus" style="font-size:10px;color:var(--teal);"></span>
+        </div>
+        <div style="font-size:10px;color:#9aa3b0;margin-bottom:6px;">Lets viewers use calibrated calipers. Upload image first.</div>
+        <button class="add-opt" id="pSetScaleBtn" style="width:100%;">Open scale calibration tool</button>
+        <div id="pScaleTool" style="display:none;margin-top:8px;">
+          <div style="position:relative;height:200px;background:#050810;border-radius:6px;overflow:hidden;margin-bottom:6px;">
+            <canvas id="pSC" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;"></canvas>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#9aa3b0;flex-wrap:wrap;">
+            <span>Drag caliper across known interval</span>
+            <input id="pScaleMs" type="number" value="200" min="1" max="10000" style="background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 6px;border-radius:4px;font-size:10px;width:50px;outline:none;height:22px;">
+            <span>ms</span>
+            <button class="add-opt" id="pScaleSet">Set</button>
+            <button class="add-opt" id="pScaleCancel">Cancel</button>
+          </div>
+        </div>
       </div>
       <div class="form-block">
         <label>Caption (optional)</label>
@@ -1062,11 +1117,6 @@
       </div>
       <div class="form-block" id="pInterpImagesBlock">
         <label>Interpretation images (optional)</label>
-        
-        <div class="hint">Upload annotated tracing, ladder diagram, etc. — multiple images allowed.</div>
-      </div>
-      <div class="form-block" style="display:none;">
-        </div>
       </div>
       <div class="form-block">
         <label>Citation / source (optional)</label>
@@ -1105,12 +1155,27 @@
     addOptRow(); addOptRow();
     el.querySelector('#addOpt').addEventListener('click', ()=> addOptRow());
  
-    let imageData = [];
-    let interpImageData = [];
- 
-    mountImageZone(el.querySelector('#pImagesBlock'), imageData, (imgs)=>{ imageData=imgs; });
- 
+    let imageData = [], interpImageData = [], pScaleVal = null;
+    mountImageZone(el.querySelector('#pImagesBlock'), imageData, (imgs)=>{
+      imageData=imgs;
+      const sc=el.querySelector('#pSC'); if(sc&&sc._update) sc._update(imgs);
+    });
     mountImageZone(el.querySelector('#pInterpImagesBlock'), interpImageData, (imgs)=>{ interpImageData=imgs; });
+ 
+    // Scale tool
+    el.querySelector('#pSetScaleBtn').addEventListener('click',()=>{
+      const tool=el.querySelector('#pScaleTool');
+      tool.style.display=tool.style.display==='none'?'block':'none';
+      if(tool.style.display==='block') mountScaleTool(el.querySelector('#pSC'), imageData);
+    });
+    el.querySelector('#pScaleSet').addEventListener('click',()=>{
+      const ms=parseFloat(el.querySelector('#pScaleMs').value); if(!ms||ms<=0) return;
+      const s=el.querySelector('#pSC')._getScale(ms);
+      if(!s){ toast('Drag caliper across a known interval first'); return; }
+      pScaleVal=s; el.querySelector('#pScaleStatus').textContent='Scale set ✓';
+      el.querySelector('#pScaleTool').style.display='none'; toast('Scale calibrated');
+    });
+    el.querySelector('#pScaleCancel').addEventListener('click',()=>{ el.querySelector('#pScaleTool').style.display='none'; });
  
     function buildCaseFromForm(status){
       const title = el.querySelector('#pTitle').value.trim();
@@ -1132,6 +1197,7 @@
         date: el.querySelector('#pDate').value,
         title,
         images: imageData,
+        scale: pScaleVal||null,
         caption: el.querySelector('#pCaption').value.trim(),
         options,
         interpDate: el.querySelector('#pInterpDate').value,
@@ -1152,8 +1218,8 @@
         if(!newCase) return;
         cases.unshift(newCase);
         cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const ok1 = await saveCases();
-        if(ok1){ toast('Case published'); promptBackup(); currentCaseId = newCase.id; switchTab('today'); }
+        const ok1=await saveCases();
+        if(ok1){toast('Case published');promptBackup();currentCaseId=newCase.id;switchTab('today');}
       }catch(err){
         console.error('Publish error:', err);
         toast('Error publishing — check console for details');
@@ -1165,8 +1231,8 @@
       if(!newCase) return;
       cases.unshift(newCase);
       cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
-      const ok2 = await saveCases();
-      if(ok2){ toast('Draft saved'); promptBackup(); el.dataset.subMode = 'new'; renderPost(); }
+      const ok2=await saveCases();
+      if(ok2){toast('Draft saved');promptBackup();el.dataset.subMode='new';renderPost();}
     });
  
     el.querySelector('#changePasscodeBtn').addEventListener('click', ()=>{
@@ -1219,8 +1285,10 @@
           const c = cases.find(x=>x.id===btn.dataset.id);
           if(!c) return;
           c.status = 'live';
-          const ok4 = await saveCases();
-          if(ok4){ toast('Case is now live'); promptBackup(); currentCaseId = c.id; switchTab('today'); }
+          await saveCases();
+          toast('Case is now live');
+          currentCaseId = c.id;
+          switchTab('today');
         });
       });
       existing.querySelectorAll('.draft-preview').forEach(btn=>{
@@ -1267,8 +1335,20 @@
           <div class="form-block"><label>Date</label>
             <input type="date" id="dDate" value="${c.date}">
           </div>
-          <div class="form-block" id="dImagesBlock"><label>EGM tracing</label>
-            
+          <div class="form-block"><label>EGM tracing</label>
+            <div class="form-block" id="dImagesBlock"><label>EGM tracing</label></div>
+          <div class="form-block" style="padding:8px;background:rgba(79,182,168,0.05);border:1px solid #2a3544;border-radius:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><label style="margin:0;font-size:11px;">Scale calibration (optional)</label><span id="dScaleStatus" style="font-size:10px;color:var(--teal);">${c.scale?"Scale set ✓":""}</span></div>
+            <button class="add-opt" id="dSetScaleBtn" style="width:100%;margin-bottom:4px;">Open scale calibration tool</button>
+            <div id="dScaleTool" style="display:none;">
+              <div style="position:relative;height:180px;background:#050810;border-radius:6px;overflow:hidden;margin-bottom:6px;"><canvas id="dSC" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;"></canvas></div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#9aa3b0;flex-wrap:wrap;">
+                <span>Drag across known interval</span>
+                <input id="dScaleMs" type="number" value="200" min="1" max="10000" style="background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 4px;border-radius:4px;font-size:10px;width:44px;outline:none;height:20px;"><span>ms</span>
+                <button class="add-opt" id="dScaleSet">Set</button>
+                <button class="add-opt" id="dScaleCancel">Cancel</button>
+              </div>
+            </div>
           </div>
           <div class="form-block"><label>Caption (optional)</label>
             <input type="text" id="dCaption" value="${escapeHtml(c.caption||'')}">
@@ -1286,9 +1366,8 @@
           <div class="form-block"><label>Interpretation (optional)</label>
             <textarea id="dText" style="min-height:120px;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n') || '')}</textarea>
           </div>
-          <div class="form-block" id="dInterpImagesBlock"><label>Interpretation images (optional)</label>
-            
-          </div>
+          <div class="form-block"><label>Interpretation image (optional)</label>
+            <div class="form-block" id="dInterpImagesBlock"><label>Interpretation images (optional)</label></div>
           <div class="form-block"><label>Citation / source (optional)</label>
             <input type="text" id="dCitation" value="${escapeHtml(c.citation||'')}">
           </div>
@@ -1324,13 +1403,27 @@
       ds.querySelector('#dAddOpt').addEventListener('click', ()=> addDOptRow());
       wireLinksUI(ds.querySelector('#dLinksFormBlock'));
  
-      // image uploads — multi-image
-      let dImageData = getImages(c).slice();
-      let dInterpImageData = getInterpImages(c).slice();
- 
-      mountImageZone(ds.querySelector('#dImagesBlock'), dImageData, (imgs)=>{ dImageData=imgs; });
- 
+      let dImageData = getImages(c).slice(), dInterpImageData = getInterpImages(c).slice(), dScaleVal = c.scale||null;
+      mountImageZone(ds.querySelector('#dImagesBlock'), dImageData, (imgs)=>{
+        dImageData=imgs;
+        const sc=ds.querySelector('#dSC'); if(sc&&sc._update) sc._update(imgs);
+      });
       mountImageZone(ds.querySelector('#dInterpImagesBlock'), dInterpImageData, (imgs)=>{ dInterpImageData=imgs; });
+ 
+      // Draft scale tool
+      ds.querySelector('#dSetScaleBtn').addEventListener('click',()=>{
+        const tool=ds.querySelector('#dScaleTool');
+        tool.style.display=tool.style.display==='none'?'block':'none';
+        if(tool.style.display==='block') mountScaleTool(ds.querySelector('#dSC'), dImageData);
+      });
+      ds.querySelector('#dScaleSet').addEventListener('click',()=>{
+        const ms=parseFloat(ds.querySelector('#dScaleMs').value); if(!ms||ms<=0) return;
+        const s=ds.querySelector('#dSC')._getScale(ms);
+        if(!s){ toast('Drag caliper first'); return; }
+        dScaleVal=s; ds.querySelector('#dScaleStatus').textContent='Scale set ✓';
+        ds.querySelector('#dScaleTool').style.display='none'; toast('Scale calibrated');
+      });
+      ds.querySelector('#dScaleCancel').addEventListener('click',()=>{ ds.querySelector('#dScaleTool').style.display='none'; });
  
       function collectDraftEdits(status){
         const title = ds.querySelector('#dTitle').value.trim();
@@ -1347,6 +1440,7 @@
           date: ds.querySelector('#dDate').value,
           title,
           images: dImageData,
+          scale: dScaleVal||null,
           caption: ds.querySelector('#dCaption').value.trim(),
           options,
           interpDate: ds.querySelector('#dInterpDate').value,
@@ -1364,16 +1458,16 @@
         const edits = collectDraftEdits('draft');
         if(!edits) return;
         Object.assign(c, edits);
-        const okd = await saveCases();
-        if(okd){ toast('Draft updated'); promptBackup(); renderDraftsSection(); }
+        const ok5=await saveCases();
+        if(ok5){toast('Draft updated');promptBackup();renderDraftsSection();}
       });
  
       ds.querySelector('#dGoLive').addEventListener('click', async ()=>{
         const edits = collectDraftEdits('live');
         if(!edits) return;
         Object.assign(c, edits);
-        const ok4 = await saveCases();
-        if(ok4){ toast('Case is now live'); promptBackup(); currentCaseId = c.id; switchTab('today'); }
+        const ok3=await saveCases();
+        if(ok3){toast('Case is now live');promptBackup();currentCaseId=c.id;switchTab('today');}
       });
  
       ds.querySelector('#backToDrafts').addEventListener('click', ()=>{
@@ -1448,10 +1542,9 @@
           <label>Interpretation (optional)</label>
           <textarea id="eText" style="min-height:120px;">${escapeHtml(i.text || [i.mechanism, i.evidence, i.management].filter(Boolean).join('\n\n') || '')}</textarea>
         </div>
-        <div class="form-block" id="eInterpImagesBlock">
-          <label>Interpretation images (optional)</label>
-          
-        </div>
+        <div class="form-block">
+          <label>Interpretation image (optional)</label>
+          <div class="form-block" id="eInterpImagesBlock"><label>Interpretation images (optional)</label></div>
         <div class="form-block">
           <label>Citation / source (optional)</label>
           <input type="text" id="eCitation" value="${escapeHtml(c.citation||'')}">
@@ -1474,36 +1567,27 @@
       wireLinksUI(el.querySelector('#eLinksFormBlock'));
       let eInterpImageData = getInterpImages(c).slice();
       mountImageZone(el.querySelector('#eInterpImagesBlock'), eInterpImageData, (imgs)=>{ eInterpImageData=imgs; });
-      // Annotation builder toggle
       let annBuilderMounted = false;
-      el.querySelector('#annToggleBtn').addEventListener('click', ()=>{
-        const mount = el.querySelector('#annBuilderMount');
-        const btn = el.querySelector('#annToggleBtn');
+      el.querySelector('#annToggleBtn').addEventListener('click',()=>{
+        const mount=el.querySelector('#annBuilderMount');
+        const btn=el.querySelector('#annToggleBtn');
         if(mount.style.display==='none'){
-          mount.style.display='block';btn.textContent='Hide steps';
-          if(!annBuilderMounted){mountAnnBuilder(mount, c);annBuilderMounted=true;}
-          // wait one frame for layout, then resize + load image
-          requestAnimationFrame(()=>{
+          mount.style.display='block'; btn.textContent='Hide steps';
+          if(!annBuilderMounted){ mountAnnBuilder(mount, c); annBuilderMounted=true; }
+          requestAnimationFrame(()=>requestAnimationFrame(()=>{
             const bc2=mount.querySelector('#annBC');
-            if(bc2){
-              if(bc2._bResize)bc2._bResize();
-              if(bc2._bLoadImg)bc2._bLoadImg();
-            }
-          });
-        } else {
-          mount.style.display='none';btn.textContent='Add steps';
-        }
+            if(bc2){ if(bc2._bResize)bc2._bResize(); if(bc2._bLoadImg)bc2._bLoadImg(); }
+          }));
+        } else { mount.style.display='none'; btn.textContent='Add steps'; }
       });
-      // If case already has steps, show builder open by default
       if(c.annotationSteps && c.annotationSteps.length){
-        const mount = el.querySelector('#annBuilderMount');
-        const btn = el.querySelector('#annToggleBtn');
-        mount.style.display='block';btn.textContent='Hide steps';
-        mountAnnBuilder(mount, c);annBuilderMounted=true;
-        requestAnimationFrame(()=>{
+        const mount=el.querySelector('#annBuilderMount'), btn=el.querySelector('#annToggleBtn');
+        mount.style.display='block'; btn.textContent='Hide steps';
+        mountAnnBuilder(mount, c); annBuilderMounted=true;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
           const bc2=mount.querySelector('#annBC');
-          if(bc2){if(bc2._bResize)bc2._bResize();if(bc2._bLoadImg)bc2._bLoadImg();}
-        });
+          if(bc2){ if(bc2._bResize)bc2._bResize(); if(bc2._bLoadImg)bc2._bLoadImg(); }
+        }));
       }
  
       el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
@@ -1514,21 +1598,17 @@
         };
         c.citation = el.querySelector('#eCitation').value.trim();
         c.links = el.querySelector('#eLinksWrap') ? collectLinks(el.querySelector('#eLinksWrap')) : [];
-        // Save annotation data if builder was used
         const mount = el.querySelector('#annBuilderMount');
-        if(annBuilderMounted && mount._annGetData){
+        if(annBuilderMounted && mount && mount._annGetData){
           const annData = mount._annGetData();
           if(annData.annotationSteps && annData.annotationSteps.some(s=>s.ann&&s.ann.length)){
             c.annotationSteps = annData.annotationSteps;
             c.finalAnn = annData.finalAnn;
             c.finalText = annData.finalText;
-          } else {
-            // No annotations drawn — clear fields
-            delete c.annotationSteps;delete c.finalAnn;delete c.finalText;
-          }
+          } else { delete c.annotationSteps; delete c.finalAnn; delete c.finalText; }
         }
-        const ok = await saveCases();
-        if(ok){ toast('Interpretation saved'); promptBackup(); el.dataset.editId=''; renderPost(); }
+        const okI=await saveCases();
+        if(okI){ toast('Interpretation saved'); promptBackup(); el.dataset.editId=''; renderPost(); }
       });
       el.querySelector('#backToPicker').addEventListener('click', ()=>{
         el.dataset.editId = '';
@@ -1593,54 +1673,39 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
  
-  // Normalize image fields — supports old single c.image and new c.images array
-  function getImages(c){ return c.images && c.images.length ? c.images : (c.image ? [c.image] : []); }
-  function getInterpImages(c){ const i=c.interp||{}; return i.images && i.images.length ? i.images : (i.image ? [i.image] : []); }
+  function getImages(c){ return c.images&&c.images.length?c.images:(c.image?[c.image]:[]); }
+  function getInterpImages(c){ const i=c.interp||{}; return i.images&&i.images.length?i.images:(i.image?[i.image]:[]); }
  
-  // Render a multi-image upload zone
-  // Mount a multi-image upload zone into a container element.
-  // Returns a cleanup function that removes event listeners.
   function mountImageZone(container, imagesArr, onChange){
     function render(){
-      // Build inner HTML — previews + add button
-      const thumbs = imagesArr.map((src,idx)=>
+      const thumbs=imagesArr.map((src,idx)=>
         '<div style="position:relative;display:inline-block;margin:0 6px 6px 0;">'+
         '<img src="'+src+'" style="height:80px;width:auto;border-radius:6px;border:1px solid var(--line);">'+
-        '<button class="miz-rm" data-idx="'+idx+'" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>'+
+        '<button class="miz-rm" data-idx="'+idx+'" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;">×</button>'+
         '</div>'
       ).join('');
-      container.innerHTML = '<div style="margin-bottom:6px;">'+thumbs+'</div>'+
+      container.innerHTML='<div style="margin-bottom:6px;">'+thumbs+'</div>'+
         '<button class="add-opt miz-add" style="width:100%;">+ Add image</button>';
-      // Wire remove buttons
       container.querySelectorAll('.miz-rm').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
+        btn.addEventListener('click',()=>{
           imagesArr.splice(parseInt(btn.dataset.idx),1);
-          onChange(imagesArr);
-          render();
+          onChange(imagesArr);render();
         });
       });
-      // Wire add button
-      container.querySelector('.miz-add').addEventListener('click', ()=>{
+      container.querySelector('.miz-add').addEventListener('click',()=>{
         const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-        inp.style.cssText='position:fixed;top:-100px;left:-100px;opacity:0;';
+        inp.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;';
         document.body.appendChild(inp);
-        inp.onchange=async e=>{
-          document.body.removeChild(inp);
-          const file=e.target.files[0];if(!file)return;
-          const jpeg=await convertToJpeg(file);
-          imagesArr.push(jpeg);
-          onChange(imagesArr);
-          render();
-        };
+        inp.addEventListener('change',async()=>{
+          const f=inp.files[0];document.body.removeChild(inp);if(!f)return;
+          const jpeg=await convertToJpeg(f);
+          imagesArr.push(jpeg);onChange(imagesArr);render();
+        });
         inp.click();
       });
     }
     render();
   }
- 
-  // Legacy stubs — kept so existing callers compile
-  function buildImageZone(){ return ''; }
-  function wireImageZone(){}
  
   function convertToJpeg(file){
     return new Promise((resolve)=>{
@@ -1662,23 +1727,23 @@
         img.onload = ()=>{
           try{
             const MAX_DIM = 800;
-            let w = img.naturalWidth, h = img.naturalHeight;
-            if(w === 0 || h === 0){
+            let iw = img.naturalWidth, ih = img.naturalHeight;
+            if(iw === 0 || ih === 0){
               URL.revokeObjectURL(blobUrl);
               if(isHeic) toast('⚠ HEIC detected — please export as JPEG from Photos first');
               resolve(dataUrl);
               return;
             }
-            if(w > MAX_DIM || h > MAX_DIM){
-              if(w > h){ h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
-              else{ w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+            if(iw > MAX_DIM || ih > MAX_DIM){
+              if(iw > ih){ ih = Math.round(ih * MAX_DIM / iw); iw = MAX_DIM; }
+              else { iw = Math.round(iw * MAX_DIM / ih); ih = MAX_DIM; }
             }
             const canvas = document.createElement('canvas');
-            canvas.width = w; canvas.height = h;
+            canvas.width = iw; canvas.height = ih;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#000';
-            ctx.fillRect(0,0,w,h);
-            ctx.drawImage(img,0,0,w,h);
+            ctx.fillRect(0,0,iw,ih);
+            ctx.drawImage(img,0,0,iw,ih);
             const jpeg = canvas.toDataURL('image/jpeg', 0.65);
             URL.revokeObjectURL(blobUrl);
             resolve(jpeg.length > 5000 ? jpeg : dataUrl);
@@ -1803,31 +1868,29 @@
  
   init();
 })();
-  // ═══════════════════════════════════════════════════
+ 
+  // ═══════════════════════════════════════════════════════
   // ANNOTATION ENGINE
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════
   const ANN_COLS=['#e8a23d','#4fb6a8','#d9685f','#c0c0c0','#9b7fe8'];
   const ANN_AH=14,ANN_BH=16;
  
-  // ── imgRect helper ──────────────────────────────────
   function annImgRect(imgEl,w,h){
     if(!imgEl)return{x:0,y:0,w,h};
-    const r=imgEl.naturalWidth/imgEl.naturalHeight,c=w/h;
-    if(r>c){const dh=w/r;return{x:0,y:(h-dh)/2,w,h:dh};}
+    const r=imgEl.width/imgEl.height,cv=w/h;
+    if(r>cv){const dh=w/r;return{x:0,y:(h-dh)/2,w,h:dh};}
     else{const dw=h*r;return{x:(w-dw)/2,y:0,w:dw,h};}
   }
- 
-  // ── Draw one annotation (fractional coords) ─────────
   function annDraw(ctx,a,isSel,R){
     const col=a.c||ANN_COLS[0];
     ctx.save();ctx.globalAlpha=isSel?1:0.92;
-    if(a.t==='arrow') annDrawArrow(ctx,a,col,isSel,R);
-    else if(a.t==='circ') annDrawCirc(ctx,a,col,isSel,R);
-    else if(a.t==='cal') annDrawCal(ctx,a,col,isSel,R);
+    if(a.t==='arrow')annAr(ctx,a,col,isSel,R);
+    else if(a.t==='circ')annCi(ctx,a,col,isSel,R);
+    else if(a.t==='cal')annCal(ctx,a,col,isSel,R);
     ctx.restore();
   }
   function annPx(f,R,ax){return ax==='x'?R.x+f*R.w:R.y+f*R.h;}
-  function annDrawArrow(c,a,col,isSel,R){
+  function annAr(c,a,col,isSel,R){
     if(a.x1===undefined)return;
     const tx=annPx(a.tx,R,'x'),ty=annPx(a.ty,R,'y'),x1=annPx(a.x1,R,'x'),y1=annPx(a.y1,R,'y');
     const dx=tx-x1,dy=ty-y1,len=Math.sqrt(dx*dx+dy*dy);if(len<2)return;
@@ -1840,62 +1903,54 @@
     c.closePath();c.fill();
     if(isSel){[[tx,ty],[x1,y1]].forEach(([hx,hy])=>{c.beginPath();c.arc(hx,hy,4,0,Math.PI*2);c.fill();});annMH(c,(tx+x1)/2,(ty+y1)/2,col);}
   }
-  function annDrawCirc(c,a,col,isSel,R){
+  function annCi(c,a,col,isSel,R){
     const x1=annPx(a.x1,R,'x'),y1=annPx(a.y1,R,'y'),x2=annPx(a.x2,R,'x'),y2=annPx(a.y2,R,'y');
     const cx=(x1+x2)/2,cy=(y1+y2)/2,rx=Math.abs(x2-x1)/2||2,ry=Math.abs(y2-y1)/2||2;
     c.strokeStyle=col;c.lineWidth=isSel?2:1.5;
     c.beginPath();c.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);c.stroke();
     if(isSel){[[x1,y1],[x2,y2]].forEach(([hx,hy])=>{c.beginPath();c.arc(hx,hy,4,0,Math.PI*2);c.fillStyle=col;c.fill();});annMH(c,cx,cy,col);}
   }
-  function annDrawCal(c,a,col,isSel,R){
+  function annCal(c,a,col,isSel,R){
     const x1=annPx(a.x1,R,'x'),x2=annPx(a.x2!==undefined?a.x2:a.x1,R,'x'),barY=annPx(a.barY!==undefined?a.barY:0.5,R,'y');
     const top=R.y,bot=R.y+R.h;
     c.strokeStyle=col;c.lineWidth=isSel?2:1.5;
     c.beginPath();c.moveTo(x1,top);c.lineTo(x1,bot);c.stroke();
     if(Math.abs(x2-x1)>2){c.beginPath();c.moveTo(x2,top);c.lineTo(x2,bot);c.stroke();}
     c.beginPath();c.moveTo(x1,barY);c.lineTo(x2,barY);c.stroke();
-    const pxW=Math.abs(x2-x1);
-    const lbl=a.lbl||(Math.round(pxW)+'px');
+    const lbl=a.lbl||(Math.round(Math.abs(x2-x1))+'px');
     c.font='bold 10px monospace';c.fillStyle=col;c.textAlign='center';c.fillText(lbl,(x1+x2)/2,Math.max(R.y+12,barY-7));c.textAlign='left';
     if(isSel){[x1,x2].forEach(ax=>{c.beginPath();c.arc(ax,barY,4,0,Math.PI*2);c.fillStyle=col;c.fill();});}
     if(a.march&&Math.abs(x2-x1)>2){
       c.globalAlpha=0.65;c.setLineDash([6,4]);
-      for(let i=1;i<80;i++){const ox=(x2-x1)*i;[[x1+ox,x2+ox],[x1-ox,x2-ox]].forEach(([a1,a2])=>{if(a1>c.canvas.width+80&&a2>c.canvas.width+80)return;if(a1<-80&&a2<-80)return;annML(c,a1,top,a1,bot,col);annML(c,a2,top,a2,bot,col);annML(c,a1,barY,a2,barY,col);});}
-      c.setLineDash([]);
+      for(let i=1;i<80;i++){const ox=(x2-x1)*i;[[x1+ox,x2+ox],[x1-ox,x2-ox]].forEach(([a1,a2])=>{
+        if(a1>c.canvas.width+80&&a2>c.canvas.width+80)return;if(a1<-80&&a2<-80)return;
+        annML(c,a1,top,a1,bot,col);annML(c,a2,top,a2,bot,col);annML(c,a1,barY,a2,barY,col);
+      });}c.setLineDash([]);
     }
   }
   function annML(c,x1,y1,x2,y2,col){c.lineWidth=2;c.strokeStyle='rgba(0,0,0,0.5)';c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.lineWidth=1;c.strokeStyle=col;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
-  function annMH(c,cx,cy,col){c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.fillStyle='rgba(0,0,0,0.55)';c.fill();c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle=col;c.font='bold 9px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('⊕',cx,cy);c.textAlign='left';c.textBaseline='alphabetic';}
+  function annMH(c,cx,cy,col){c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.fillStyle='rgba(0,0,0,0.55)';c.fill();c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle=col;c.font='bold 9px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('\u2295',cx,cy);c.textAlign='left';c.textBaseline='alphabetic';}
  
-  // ── Viewer: step-by-step reveal ──────────────────────
-  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFinal=false;
-  const annOverlay=document.getElementById('annOverlay');
+  // Viewer
+  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false;
   let annVC=null,annVCtx=null;
-  function annGetCtx(){
-    if(!annVC){ annVC=document.getElementById('annVC'); if(annVC) annVCtx=annVC.getContext('2d'); }
-    return annVCtx;
-  }
+  function annGetCtx(){if(!annVC){annVC=document.getElementById('annVC');if(annVC)annVCtx=annVC.getContext('2d');}return annVCtx;}
  
   function startAnnViewer(caseObj){
-    const c=caseObj;
-    annVSteps=c.annotationSteps||[];
-    annVFinalAnn=c.finalAnn||[];
-    annVFinalText=c.finalText||c.interp?.text||'';
-    annVStep=0;annVFinal=false;
-    // Load image
-    const imgs=getImages(c);
-    if(imgs.length){
-      const im=new Image();im.onload=()=>{annVImg=im;annVSizeCanvas();annVRender();};im.src=imgs[0];
-    } else {annVImg=null;annVSizeCanvas();annVRender();}
-    annOverlay.classList.add('show');
+    annVSteps=caseObj.annotationSteps||[];
+    annVFinalAnn=caseObj.finalAnn||[];
+    annVFinalText=caseObj.finalText||caseObj.interp&&caseObj.interp.text||'';
+    annVStep=0;annVFin=false;
+    const imgs=getImages(caseObj);
+    if(imgs.length){const im=new Image();im.onload=()=>{annVImg=im;annVSize();annVRender();};im.src=imgs[0];}
+    else{annVImg=null;annVSize();annVRender();}
+    const ov=document.getElementById('annOverlay');ov.style.display='flex';
   }
- 
-  function annVSizeCanvas(){
+  function annVSize(){
     if(!annGetCtx())return;
     const r=document.getElementById('annCanvasWrap').getBoundingClientRect();
     annVC.width=Math.floor(r.width);annVC.height=Math.floor(r.height);
   }
- 
   function annVRender(){
     if(!annGetCtx())return;
     const W=annVC.width,H=annVC.height;if(W<1||H<1)return;
@@ -1903,28 +1958,85 @@
     const R=annImgRect(annVImg,W,H);
     if(annVImg){try{annVCtx.drawImage(annVImg,R.x,R.y,R.w,R.h);}catch(e){}}
     const desc=document.getElementById('annDesc'),fin=document.getElementById('annFinalText');
-    const prog=document.getElementById('annProg'),next=document.getElementById('annNext'),prev=document.getElementById('annPrev');
-    if(annVFinal){
+    const prog=document.getElementById('annProg'),nxt=document.getElementById('annNext'),prv=document.getElementById('annPrev');
+    if(annVFin){
       (annVFinalAnn.length?annVFinalAnn:annVSteps.flatMap(s=>s.ann||[])).forEach(a=>{try{annDraw(annVCtx,a,false,R);}catch(e){}});
       desc.style.display='none';fin.style.display='block';
       fin.textContent=annVFinalText||annVSteps.map(s=>s.desc).filter(Boolean).join('\n\n')||'';
-      prog.textContent='Final';next.textContent='Close';
-      next.onclick=()=>{annOverlay.classList.remove('show');annVImg=null;};
-      prev.disabled=false;prev.onclick=()=>{annVFinal=false;annVStep=annVSteps.length-1;annVRender();};
+      prog.textContent='Final';nxt.textContent='Close';
+      nxt.onclick=()=>{document.getElementById('annOverlay').style.display='none';annVImg=null;};
+      prv.disabled=false;prv.onclick=()=>{annVFin=false;annVStep=annVSteps.length-1;annVRender();};
     } else {
       const s=annVSteps[annVStep];
       (s.ann||[]).forEach(a=>{try{annDraw(annVCtx,a,false,R);}catch(e){}});
       desc.style.display='block';fin.style.display='none';
       desc.textContent=s.desc||'';
       prog.textContent='Step '+(annVStep+1)+' of '+annVSteps.length;
-      next.textContent=annVStep<annVSteps.length-1?'Next →':'Show interpretation';
-      next.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else{annVFinal=true;annVRender();}};
-      prev.disabled=annVStep===0;prev.onclick=()=>{if(annVStep>0){annVStep--;annVRender();}};
+      nxt.textContent=annVStep<annVSteps.length-1?'Next \u2192':'Show interpretation';
+      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else{annVFin=true;annVRender();}};
+      prv.disabled=annVStep===0;prv.onclick=()=>{if(annVStep>0){annVStep--;annVRender();}};
     }
   }
-  window.addEventListener('resize',()=>{if(annOverlay.classList.contains('show')){annVSizeCanvas();annVRender();}});
+  window.addEventListener('resize',()=>{if(document.getElementById('annOverlay').style.display==='flex'){annVSize();annVRender();}});
  
-  // ── Builder: embedded in edit-interp form ────────────
+  // Scale tool
+  function mountScaleTool(canvasEl, imagesArr){
+    const ctx=canvasEl.getContext('2d');
+    let img=null,IR={x:0,y:0,w:1,h:1},cal=null,drag=null;
+    function resize(){
+      const wrap=canvasEl.parentElement;
+      const w=Math.floor(wrap.getBoundingClientRect().width||wrap.offsetWidth||0);
+      if(w>20){canvasEl.width=w;canvasEl.height=canvasEl.parentElement.offsetHeight||200;}
+      draw();
+    }
+    function draw(){
+      const W=canvasEl.width,H=canvasEl.height;if(!W||!H)return;
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#050810';ctx.fillRect(0,0,W,H);
+      IR=annImgRect(img,W,H);
+      if(img){try{ctx.drawImage(img,IR.x,IR.y,IR.w,IR.h);}catch(e){}}
+      else{ctx.fillStyle='#3a4a5a';ctx.font='10px monospace';ctx.fillText('Upload a tracing image above first',10,H/2);}
+      if(cal){
+        ctx.save();ctx.globalAlpha=0.85;ctx.setLineDash([6,4]);ctx.strokeStyle='#e8a23d';ctx.lineWidth=1.5;
+        const x1=IR.x+cal.x1*IR.w,x2=IR.x+(cal.x2||cal.x1)*IR.w,by=IR.y+(cal.by||0.5)*IR.h;
+        ctx.beginPath();ctx.moveTo(x1,IR.y);ctx.lineTo(x1,IR.y+IR.h);ctx.stroke();
+        if(Math.abs(x2-x1)>2){ctx.beginPath();ctx.moveTo(x2,IR.y);ctx.lineTo(x2,IR.y+IR.h);ctx.stroke();}
+        ctx.beginPath();ctx.moveTo(x1,by);ctx.lineTo(x2,by);ctx.stroke();
+        ctx.setLineDash([]);ctx.restore();
+      }
+    }
+    function gp(e){const r=canvasEl.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
+    canvasEl.addEventListener('mousedown',e=>{
+      const{x,y}=gp(e);const fx=(x-IR.x)/IR.w,fy=(y-IR.y)/IR.h;
+      if(!cal){cal={x1:fx,x2:fx,by:fy};drag={sx:x,sy:y,ox1:fx,ox2:fx,oby:fy,p:'r'};}
+      else{const cx1=IR.x+cal.x1*IR.w,cx2=IR.x+(cal.x2||cal.x1)*IR.w;
+        if(Math.abs(x-cx1)<14)drag={sx:x,sy:y,ox1:cal.x1,ox2:cal.x2||cal.x1,oby:cal.by||0.5,p:'l'};
+        else if(Math.abs(x-cx2)<14)drag={sx:x,sy:y,ox1:cal.x1,ox2:cal.x2||cal.x1,oby:cal.by||0.5,p:'r'};
+        else drag={sx:x,sy:y,ox1:cal.x1,ox2:cal.x2||cal.x1,oby:cal.by||0.5,p:'bar'};}
+      draw();
+    });
+    canvasEl.addEventListener('mousemove',e=>{
+      if(!drag)return;const{x,y}=gp(e);const dfx=(x-drag.sx)/IR.w,dfy=(y-drag.sy)/IR.h,cy=v=>Math.max(0,Math.min(1,v));
+      if(drag.p==='r'){cal.x2=drag.ox2+dfx;cal.by=cy(drag.oby+dfy);}
+      else if(drag.p==='l')cal.x1=drag.ox1+dfx;
+      else if(drag.p==='bar'){cal.by=cy(drag.oby+dfy);cal.x1=drag.ox1+dfx;cal.x2=drag.ox2+dfx;}
+      draw();
+    });
+    canvasEl.addEventListener('mouseup',()=>{drag=null;});
+    canvasEl._update=(imgs)=>{
+      if(imgs&&imgs.length){const im=new Image();im.onload=()=>{img=im;resize();};im.src=imgs[0];}
+      else{img=null;draw();}
+    };
+    canvasEl._getScale=(ms)=>{
+      if(!cal||Math.abs((cal.x2||cal.x1)-cal.x1)*IR.w<4)return null;
+      return Math.abs(cal.x2-cal.x1)*IR.w/ms;
+    };
+    setTimeout(()=>{
+      resize();
+      if(imagesArr&&imagesArr.length){const im=new Image();im.onload=()=>{img=im;draw();};im.src=imagesArr[0];}
+    },80);
+  }
+ 
+  // Builder
   function mountAnnBuilder(container, caseObj){
     const COLS=ANN_COLS;
     let bImg=null,bIR={x:0,y:0,w:1,h:1};
@@ -1932,76 +2044,65 @@
     if(!bSteps.length)bSteps=[{ann:[],desc:''}];
     let bCurI=0,bActiveAnn=bSteps[0].ann,bSel=null;
     let bFinalAnn=JSON.parse(JSON.stringify(caseObj.finalAnn||[]));
-    let bFinalText=caseObj.finalText||'';
     let bInFinal=false;
     let bTool='arrow',bCol=COLS[0],bDrag=null,bPlacing=null,bUndo=[];
-    let bScale=caseObj.scale||null,bScaleMode=false,bScaleCal=null;
+    let bScaleMode=false,bScaleCal=null;
     let bIdn=1000;
  
-    container.innerHTML=`
-      <div id="annBuilder">
-        <div id="annBToolbar"><div id="annBTbi"></div></div>
-        <div id="annBScaleBar" style="display:none;background:#171f2b;border-bottom:1px solid #2a3544;padding:0 8px;height:28px;align-items:center;gap:6px;font-size:9px;color:#9aa3b0;">
-          <span>Drag caliper across known interval →</span>
-          <input id="annBMsIn" type="number" value="200" min="1" max="10000" style="background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 4px;border-radius:4px;font-size:9px;width:44px;outline:none;height:18px;">
-          <span>ms</span>
-          <button class="abtb" id="annBSetSc" style="height:18px;padding:0 6px;">Set</button>
-          <button class="abtb" id="annBCanSc" style="height:18px;padding:0 6px;">Cancel</button>
-        </div>
-        <div id="annBCanvas"><canvas id="annBC" tabindex="0"></canvas></div>
-        <div id="annBSteps">
-          <div id="annBStepList"></div>
-          <div id="annBForm">
-            <textarea id="annBDesc" placeholder="Describe this finding..."></textarea>
-            <div class="abs-save-row">
-              <button class="abs-save-btn" id="annBSave">Save step</button>
-              <button class="abs-new-btn" id="annBNew">+ New step</button>
-            </div>
-          </div>
-          <div id="annFinalSection">
-            <div style="font-size:8.5px;color:#9aa3b0;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Final interpretation text (auto-filled from steps)</div>
-            <textarea id="annFinalTxt" placeholder="Combined text shown after all steps..."></textarea>
-            <button class="abs-save-btn" id="annBFinalView" style="margin-top:4px;width:100%;">Final view →</button>
-          </div>
-        </div>
-      </div>`;
+    container.innerHTML=
+      '<div id="annBuilder">'+
+        '<div id="annBToolbar"><div id="annBTbi"></div></div>'+
+        '<div id="annBScaleBar"><span>Drag caliper across known interval</span>'+
+          '<input id="annBMsIn" type="number" value="200" min="1" max="10000" style="background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 4px;border-radius:4px;font-size:9px;width:44px;outline:none;height:18px;">'+
+          '<span>ms</span>'+
+          '<button class="abtb" id="annBSetSc" style="height:18px;padding:0 6px;">Set</button>'+
+          '<button class="abtb" id="annBCanSc" style="height:18px;padding:0 6px;">Cancel</button></div>'+
+        '<div id="annBCanvas"><canvas id="annBC" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;touch-action:none;"></canvas></div>'+
+        '<div id="annBSteps">'+
+          '<div id="annBStepList"></div>'+
+          '<div id="annBForm">'+
+            '<textarea id="annBDesc" placeholder="Describe this finding..."></textarea>'+
+            '<div class="abs-save-row">'+
+              '<button class="abs-save-btn" id="annBSave">Save step</button>'+
+              '<button class="abs-new-btn" id="annBNew">+ New step</button>'+
+            '</div>'+
+          '</div>'+
+          '<div id="annFinalSection">'+
+            '<div style="font-size:8.5px;color:#9aa3b0;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Final interpretation text</div>'+
+            '<textarea id="annFinalTxt" placeholder="Combined text shown after all steps..."></textarea>'+
+            '<button class="abs-save-btn" id="annBFinalView" style="margin-top:4px;width:100%;">Final view \u2192</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
  
     const bc=container.querySelector('#annBC');
     const bctx=bc.getContext('2d');
+    bc.width=600;bc.height=240;
  
-    // Load image from case
     function bResize(){
       const wrap=container.querySelector('#annBCanvas');
-      const w=wrap.getBoundingClientRect().width||wrap.offsetWidth||0;
-      if(w>10){
-        bc.width=Math.floor(w);bc.height=240;
-      }
+      const w=Math.floor(wrap.getBoundingClientRect().width||wrap.offsetWidth||0);
+      if(w>20){bc.width=w;bc.height=240;}
       bDraw();
     }
- 
-    // Load image immediately — don't wait for resize
-    function bLoadCaseImage(){
+    function bLoadCaseImg(){
       const imgs=getImages(caseObj);
-      if(imgs.length && !bImg){
-        const im=new Image();
-        im.onload=()=>{bImg=im;bResize();bDraw();};
-        im.src=imgs[0];
+      if(imgs.length&&!bImg){
+        const im=new Image();im.onload=()=>{bImg=im;bResize();bDraw();};im.src=imgs[0];
       }
     }
- 
     function bDraw(){
       const W=bc.width,H=bc.height;if(W<1||H<1)return;
       bctx.clearRect(0,0,W,H);bctx.fillStyle='#050810';bctx.fillRect(0,0,W,H);
       bIR=annImgRect(bImg,W,H);
       if(bImg){try{bctx.drawImage(bImg,bIR.x,bIR.y,bIR.w,bIR.h);}catch(e){}}
-      else{bctx.strokeStyle='#4fb6a8';bctx.lineWidth=1;bctx.beginPath();bctx.moveTo(0,H/2);bctx.lineTo(W,H/2);bctx.stroke();bctx.fillStyle='#3a4a5a';bctx.font='9px monospace';bctx.fillText('Load case image above to see it here',10,H-8);}
+      else{bctx.strokeStyle='#4fb6a8';bctx.lineWidth=1;bctx.beginPath();bctx.moveTo(0,H/2);bctx.lineTo(W,H/2);bctx.stroke();bctx.fillStyle='#3a4a5a';bctx.font='9px monospace';bctx.fillText('Use Load image or upload tracing image above',10,H-8);}
       if(bInFinal){
         bSteps.forEach(s=>{(s.ann||[]).forEach(a=>{bctx.save();bctx.globalAlpha=0.4;try{annDraw(bctx,a,false,bIR);}catch(e){}bctx.restore();});});
         bActiveAnn.forEach(a=>{try{annDraw(bctx,a,a.id===bSel,bIR);}catch(e){}});
       } else {
         bActiveAnn.forEach(a=>{try{annDraw(bctx,a,a.id===bSel,bIR);}catch(e){}});
         if(bPlacing)try{annDraw(bctx,bPlacing,false,bIR);}catch(e){}
-        // draw scale caliper if in scale mode
         if(bScaleMode&&bScaleCal){
           bctx.save();bctx.globalAlpha=0.8;bctx.setLineDash([6,4]);bctx.strokeStyle='#e8a23d';bctx.lineWidth=1.5;
           const sx1=annPx(bScaleCal.x1,bIR,'x'),sx2=annPx(bScaleCal.x2||bScaleCal.x1,bIR,'x'),sby=annPx(bScaleCal.by||0.5,bIR,'y');
@@ -2013,89 +2114,63 @@
       }
     }
  
-    function bWireScaleBar(){
-      const setBtn=container.querySelector('#annBSetSc');
-      const canBtn=container.querySelector('#annBCanSc');
-      if(setBtn) setBtn.onclick=()=>{
-        if(!bScaleCal||Math.abs((bScaleCal.x2||0)-bScaleCal.x1)*bIR.w<2){toast('Place scale caliper on canvas first');return;}
-        const ms=parseFloat(container.querySelector('#annBMsIn').value);if(!ms||ms<=0)return;
-        bScale=Math.abs(bScaleCal.x2-bScaleCal.x1)*bIR.w/ms;
-        caseObj.scale=bScale;// save to case
-        bScaleMode=false;bScaleCal=null;
-        container.querySelector('#annBScaleBar').style.display='none';
-        toast('Scale set: '+Math.round(ms)+'ms interval calibrated');
-        bBuildTb();bDraw();
-      };
-      if(canBtn) canBtn.onclick=()=>{
-        bScaleMode=false;bScaleCal=null;
-        container.querySelector('#annBScaleBar').style.display='none';
-        bBuildTb();bDraw();
-      };
-    }
- 
-    function bLoadImageFile(){
-      const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-      inp.style.cssText='position:fixed;top:-100px;left:-100px;opacity:0;';
-      document.body.appendChild(inp);
-      inp.onchange=async e=>{
-        document.body.removeChild(inp);
-        const f=e.target.files[0];if(!f)return;
-        const jpeg=await convertToJpeg(f);
-        const im=new Image();im.onload=()=>{bImg=im;bDraw();};im.src=jpeg;
-      };inp.click();
-    }
- 
     function bBuildTb(){
       const tbi=container.querySelector('#annBTbi');tbi.innerHTML='';
       const b=(l,cls)=>{const e=document.createElement('button');e.className='abtb'+(cls?' '+cls:'');e.textContent=l;e.addEventListener('click',()=>setTimeout(()=>bc.focus(),0));return e;};
       const sep=()=>{const d=document.createElement('div');d.className='absep';return d;};
-      // shared: draw tools + colors
-      const drawTools=()=>{
-        [['Arrow','arrow'],['Circle','circle'],['Caliper','cal']].forEach(([l,t])=>{
-          const e=b(l);if(bTool===t)e.classList.add('on');e.onclick=()=>{bTool=t;bBuildTb();bc.focus();};tbi.appendChild(e);
-        });
-        tbi.appendChild(sep());
-        COLS.forEach(c=>{const d=document.createElement('div');d.className='abdot'+(bCol===c?' on':'');d.style.background=c;
-          d.onclick=()=>{bCol=c;if(bSel){const a=bActiveAnn.find(a=>a.id===bSel);if(a){a.c=c;bDraw();}}bBuildTb();bc.focus();};
-          tbi.appendChild(d);});
-        tbi.appendChild(sep());
-      };
+      const tools=()=>{[['Arrow','arrow'],['Circle','circle'],['Caliper','cal']].forEach(([l,t])=>{
+        const e=b(l);if(bTool===t)e.classList.add('on');e.onclick=()=>{bTool=t;bBuildTb();bc.focus();};tbi.appendChild(e);
+      });tbi.appendChild(sep());
+      COLS.forEach(col=>{const d=document.createElement('div');d.className='abdot'+(bCol===col?' on':'');d.style.background=col;
+        d.onclick=()=>{bCol=col;if(bSel){const a=bActiveAnn.find(a=>a.id===bSel);if(a){a.c=col;bDraw();}}bBuildTb();bc.focus();};tbi.appendChild(d);});
+      tbi.appendChild(sep());};
       if(!bInFinal){
-        drawTools();
+        tools();
         const u=b('Undo');u.onclick=()=>{if(bUndo.length){bActiveAnn=bUndo.pop();bSteps[bCurI].ann=bActiveAnn;bSel=null;bDraw();}bc.focus();};tbi.appendChild(u);
-        const cl=b('Clear','red');cl.onclick=()=>{bPushU();bActiveAnn=[];bSteps[bCurI].ann=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
+        const cl=b('Clear','red');cl.onclick=()=>{bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=[];bSteps[bCurI].ann=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
         tbi.appendChild(sep());
-        const li=b('Load image');li.onclick=bLoadImageFile;tbi.appendChild(li);
         const scBtn=b('Scale');if(bScaleMode)scBtn.classList.add('on');
-        scBtn.onclick=()=>{
-          bScaleMode=!bScaleMode;bScaleCal=null;
-          container.querySelector('#annBScaleBar').style.display=bScaleMode?'flex':'none';
-          bBuildTb();bc.focus();
-        };tbi.appendChild(scBtn);
+        scBtn.onclick=()=>{bScaleMode=!bScaleMode;bScaleCal=null;container.querySelector('#annBScaleBar').style.display=bScaleMode?'flex':'none';bBuildTb();bc.focus();};tbi.appendChild(scBtn);
+        const li=b('Load img');li.onclick=()=>{
+          const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+          inp.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;';
+          document.body.appendChild(inp);
+          inp.addEventListener('change',async()=>{
+            const f=inp.files[0];document.body.removeChild(inp);if(!f)return;
+            const jpeg=await convertToJpeg(f);
+            const im=new Image();im.onload=()=>{bImg=im;bDraw();};im.src=jpeg;
+          });inp.click();
+        };tbi.appendChild(li);
       } else {
-        drawTools();
+        tools();
         const u=b('Undo');u.onclick=()=>{if(bUndo.length){bActiveAnn=bUndo.pop();bFinalAnn=bActiveAnn;bSel=null;bDraw();}bc.focus();};tbi.appendChild(u);
-        const cl=b('Clear','red');cl.onclick=()=>{bPushU();bActiveAnn=[];bFinalAnn=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
+        const cl=b('Clear','red');cl.onclick=()=>{bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=[];bFinalAnn=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
         tbi.appendChild(sep());
-        const ex=b('← Exit final','grn');ex.onclick=bExitFinal;tbi.appendChild(ex);
+        const ex=b('Exit final','grn');ex.onclick=bExitFinal;tbi.appendChild(ex);
       }
-      // scale toolbar to fit
       const sw=container.querySelector('#annBToolbar').clientWidth-16;
       const nat=tbi.scrollWidth;
-      if(nat>sw)tbi.style.transform=`scale(${Math.max(0.5,sw/nat)})`;else tbi.style.transform='scale(1)';
+      if(nat>sw)tbi.style.transform='scale('+Math.max(0.5,sw/nat)+')';else tbi.style.transform='scale(1)';
       tbi.style.transformOrigin='left center';
     }
  
-    function bPushU(){bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));if(bUndo.length>30)bUndo.shift();}
-    function bSyncBack(){if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;}
+    // Scale bar buttons
+    container.querySelector('#annBSetSc').onclick=()=>{
+      if(!bScaleCal||Math.abs((bScaleCal.x2||0)-bScaleCal.x1)*bIR.w<2){toast('Place scale caliper first');return;}
+      const ms=parseFloat(container.querySelector('#annBMsIn').value);if(!ms||ms<=0)return;
+      caseObj.scale=Math.abs(bScaleCal.x2-bScaleCal.x1)*bIR.w/ms;
+      bScaleMode=false;bScaleCal=null;container.querySelector('#annBScaleBar').style.display='none';
+      toast('Scale calibrated: '+Math.round(ms)+'ms');bBuildTb();bDraw();
+    };
+    container.querySelector('#annBCanSc').onclick=()=>{bScaleMode=false;bScaleCal=null;container.querySelector('#annBScaleBar').style.display='none';bBuildTb();bDraw();};
  
-    // hit test
     function bHit(px,py){
       const R=bIR;
       for(let i=bActiveAnn.length-1;i>=0;i--){
         const a=bActiveAnn[i];
         if(a.t==='arrow'||a.t==='circ'){
-          let cx,cy;if(a.t==='arrow'){cx=annPx((a.tx+a.x1)/2,R,'x');cy=annPx((a.ty+a.y1)/2,R,'y');}else{cx=annPx((a.x1+a.x2)/2,R,'x');cy=annPx((a.y1+a.y2)/2,R,'y');}
+          let cx,cy;if(a.t==='arrow'){cx=annPx((a.tx+a.x1)/2,R,'x');cy=annPx((a.ty+a.y1)/2,R,'y');}
+          else{cx=annPx((a.x1+a.x2)/2,R,'x');cy=annPx((a.y1+a.y2)/2,R,'y');}
           if(Math.hypot(px-cx,py-cy)<10)return{id:a.id,p:'mv'};
         }
         if(a.t==='arrow'){if(Math.hypot(px-annPx(a.tx,R,'x'),py-annPx(a.ty,R,'y'))<ANN_AH)return{id:a.id,p:'tip'};if(Math.hypot(px-annPx(a.x1,R,'x'),py-annPx(a.y1,R,'y'))<ANN_AH)return{id:a.id,p:'tail'};}
@@ -2106,54 +2181,53 @@
     function bGP(e){const r=bc.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
     function bPD(e){
       e.preventDefault();bc.focus();
-      const{x,y}=bGP(e);const R=bIR;
-      const fx=(x-R.x)/R.w,fy=(y-R.y)/R.h;
-      // scale caliper mode
+      const{x,y}=bGP(e);const R=bIR;const fx=(x-R.x)/R.w,fy=(y-R.y)/R.h;
       if(bScaleMode){
         if(!bScaleCal){bScaleCal={x1:fx,x2:fx,by:fy};bDrag={t:'sc',p:'r',sx:x,sy:y,ox1:fx,ox2:fx,oby:fy};}
-        else{
-          const R2=bIR;
-          const scx1=annPx(bScaleCal.x1,R2,'x'),scx2=annPx(bScaleCal.x2||bScaleCal.x1,R2,'x'),scby=annPx(bScaleCal.by||0.5,R2,'y');
-          if(Math.abs(x-scx1)<14)bDrag={t:'sc',p:'l',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
-          else if(Math.abs(x-scx2)<14)bDrag={t:'sc',p:'r',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
-          else bDrag={t:'sc',p:'bar',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
-        }
+        else{const cx1=annPx(bScaleCal.x1,bIR,'x'),cx2=annPx(bScaleCal.x2||bScaleCal.x1,bIR,'x');
+          if(Math.abs(x-cx1)<14)bDrag={t:'sc',p:'l',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
+          else if(Math.abs(x-cx2)<14)bDrag={t:'sc',p:'r',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};
+          else bDrag={t:'sc',p:'bar',sx:x,sy:y,ox1:bScaleCal.x1,ox2:bScaleCal.x2||bScaleCal.x1,oby:bScaleCal.by||0.5};}
         bDraw();return;
       }
       const hit=bHit(x,y);
       if(hit){bSel=hit.id;const a=bActiveAnn.find(a=>a.id===hit.id);bDrag={t:'ed',id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2,oy1:a.y1,oy2:a.y2,otx:a.tx,oty:a.ty,oby:a.barY||0.5};}
-      else{bSel=null;if(bTool==='arrow'){bPlacing={t:'arrow',id:'p',tx:fx,ty:fy,x1:fx,y1:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}else if(bTool==='circle'){bPlacing={t:'circ',id:'p',x1:fx,y1:fy,x2:fx,y2:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}else if(bTool==='cal'){bPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y,ox2:fx};}}
+      else{bSel=null;if(bTool==='arrow'){bPlacing={t:'arrow',id:'p',tx:fx,ty:fy,x1:fx,y1:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}
+        else if(bTool==='circle'){bPlacing={t:'circ',id:'p',x1:fx,y1:fy,x2:fx,y2:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}
+        else if(bTool==='cal'){bPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y,ox2:fx};}}
       bDraw();
     }
     function bPM(e){
       e.preventDefault();const{x,y}=bGP(e);if(!bDrag)return;
-      const R=bIR,dfx=(x-bDrag.sx)/R.w,dfy=(y-bDrag.sy)/R.h,cy=v=>Math.max(0,Math.min(1,v));
+      const R=bIR,dfx=(x-bDrag.sx)/R.w,dfy=(y-bDrag.sy)/R.h,clamp=v=>Math.max(0,Math.min(1,v));
       if(bDrag.t==='sc'&&bScaleCal){
-        if(bDrag.p==='r'){bScaleCal.x2=bDrag.ox2+dfx;bScaleCal.by=cy(bDrag.oby+dfy);}
+        if(bDrag.p==='r'){bScaleCal.x2=bDrag.ox2+dfx;bScaleCal.by=clamp(bDrag.oby+dfy);}
         else if(bDrag.p==='l')bScaleCal.x1=bDrag.ox1+dfx;
-        else if(bDrag.p==='bar'){bScaleCal.by=cy(bDrag.oby+dfy);bScaleCal.x1=bDrag.ox1+dfx;bScaleCal.x2=bDrag.ox2+dfx;}
+        else{bScaleCal.by=clamp(bDrag.oby+dfy);bScaleCal.x1=bDrag.ox1+dfx;bScaleCal.x2=bDrag.ox2+dfx;}
         bDraw();return;
       }
       if(bDrag.t==='pl'&&bPlacing){
         const fx=(x-R.x)/R.w,fy=(y-R.y)/R.h;
-        if(bPlacing.t==='arrow'){bPlacing.x1=fx;bPlacing.y1=fy;}else if(bPlacing.t==='circ'){bPlacing.x2=fx;bPlacing.y2=fy;}else if(bPlacing.t==='cal'){bPlacing.x2=bDrag.ox2+dfx;bPlacing.barY=cy((bDrag.sy-R.y)/R.h+dfy);}
+        if(bPlacing.t==='arrow'){bPlacing.x1=fx;bPlacing.y1=fy;}
+        else if(bPlacing.t==='circ'){bPlacing.x2=fx;bPlacing.y2=fy;}
+        else if(bPlacing.t==='cal'){bPlacing.x2=bDrag.ox2+dfx;bPlacing.barY=clamp((bDrag.sy-R.y)/R.h+dfy);}
         bDraw();return;
       }
       if(bDrag.t==='ed'){
         const a=bActiveAnn.find(a=>a.id===bDrag.id);if(!a)return;
         if(a.t==='arrow'){if(bDrag.p==='tip'){a.tx=bDrag.otx+dfx;a.ty=bDrag.oty+dfy;}else if(bDrag.p==='tail'){a.x1=bDrag.ox1+dfx;a.y1=bDrag.oy1+dfy;}else if(bDrag.p==='mv'){a.tx=bDrag.otx+dfx;a.ty=bDrag.oty+dfy;a.x1=bDrag.ox1+dfx;a.y1=bDrag.oy1+dfy;}}
         else if(a.t==='circ'){if(bDrag.p==='p1'){a.x1=bDrag.ox1+dfx;a.y1=bDrag.oy1+dfy;}else if(bDrag.p==='p2'){a.x2=bDrag.ox2+dfx;a.y2=bDrag.oy2+dfy;}else if(bDrag.p==='mv'){a.x1=bDrag.ox1+dfx;a.y1=bDrag.oy1+dfy;a.x2=bDrag.ox2+dfx;a.y2=bDrag.oy2+dfy;}}
-        else if(a.t==='cal'){if(bDrag.p==='l')a.x1=bDrag.ox1+dfx;else if(bDrag.p==='r'){a.x2=bDrag.ox2+dfx;a.barY=cy(bDrag.oby+dfy);}else if(bDrag.p==='bar'){a.barY=cy(bDrag.oby+dfy);a.x1=bDrag.ox1+dfx;a.x2=bDrag.ox2+dfx;}}
+        else if(a.t==='cal'){if(bDrag.p==='l')a.x1=bDrag.ox1+dfx;else if(bDrag.p==='r'){a.x2=bDrag.ox2+dfx;a.barY=clamp(bDrag.oby+dfy);}else if(bDrag.p==='bar'){a.barY=clamp(bDrag.oby+dfy);a.x1=bDrag.ox1+dfx;a.x2=bDrag.ox2+dfx;}}
         bDraw();
       }
     }
     function bPU(){
-      if(bDrag?.t==='pl'&&bPlacing){
+      if(bDrag&&bDrag.t==='pl'&&bPlacing){
         const R=bIR;let ok=false;
         if(bPlacing.t==='arrow')ok=Math.hypot((bPlacing.x1-bPlacing.tx)*R.w,(bPlacing.y1-bPlacing.ty)*R.h)>5;
         else if(bPlacing.t==='circ')ok=Math.hypot((bPlacing.x2-bPlacing.x1)*R.w,(bPlacing.y2-bPlacing.y1)*R.h)>5;
         else if(bPlacing.t==='cal')ok=Math.abs((bPlacing.x2-bPlacing.x1)*R.w)>5;
-        if(ok){bPushU();const a={...bPlacing,id:bIdn++};bActiveAnn.push(a);bSel=a.id;bSyncBack();}
+        if(ok){bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));const a={...bPlacing,id:bIdn++};bActiveAnn.push(a);bSel=a.id;if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;}
         bPlacing=null;
       }
       bDrag=null;bDraw();
@@ -2164,22 +2238,21 @@
     bc.addEventListener('touchstart',bPD,{passive:false});bc.addEventListener('touchmove',bPM,{passive:false});bc.addEventListener('touchend',bPU);
     bc.addEventListener('keydown',e=>{
       if(document.activeElement.tagName==='TEXTAREA')return;
-      if((e.key==='Delete'||e.key==='Backspace')&&bSel){e.preventDefault();bPushU();bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);bSyncBack();bSel=null;bDraw();}
-      if((e.key==='m'||e.key==='M')&&bSel){const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');if(a){bPushU();a.march=!a.march;bDraw();}}
+      if((e.key==='Delete'||e.key==='Backspace')&&bSel){e.preventDefault();bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;bSel=null;bDraw();}
+      if((e.key==='m'||e.key==='M')&&bSel){const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');if(a){bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));a.march=!a.march;bDraw();}}
     });
  
-    // step management
-    function bSaveCur(loud){if(bInFinal||bCurI>=bSteps.length)return;bSteps[bCurI].ann=JSON.parse(JSON.stringify(bActiveAnn));bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();}
+    function bSaveCur(){if(bInFinal||bCurI>=bSteps.length)return;bSteps[bCurI].ann=JSON.parse(JSON.stringify(bActiveAnn));bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();}
     function bLoadStep(i){bCurI=i;bActiveAnn=JSON.parse(JSON.stringify(bSteps[i].ann||[]));container.querySelector('#annBDesc').value=bSteps[i].desc||'';bSel=null;bDraw();bRenderList();}
-    function bAutoFill(){const t=bSteps.map(s=>s.desc||'').filter(Boolean).join('\n\n');if(!caseObj._annFinalSaved){container.querySelector('#annFinalTxt').value=t;bFinalText=t;}}
+    function bAutoFill(){const t=bSteps.map(s=>s.desc||'').filter(Boolean).join('\n\n');if(!caseObj._annFinalSaved){container.querySelector('#annFinalTxt').value=t;}}
     function bRenderList(){
       const list=container.querySelector('#annBStepList');list.innerHTML='';
       bSteps.forEach((s,i)=>{
         const d=document.createElement('div');d.className='abs-item'+(bCurI===i?' on':'');
         d.innerHTML='<div class="abs-n">Step '+(i+1)+'</div><div class="abs-d">'+(s.desc||'(no description)')+'</div>'+
           '<div class="abs-btns"><button class="abs-btn" data-i="'+i+'" data-a="e">Edit</button>'+
-          '<button class="abs-btn" data-i="'+i+'" data-a="u">↑</button>'+
-          '<button class="abs-btn" data-i="'+i+'" data-a="d">↓</button>'+
+          '<button class="abs-btn" data-i="'+i+'" data-a="u">\u2191</button>'+
+          '<button class="abs-btn" data-i="'+i+'" data-a="d">\u2193</button>'+
           '<button class="abs-btn r" data-i="'+i+'" data-a="x">Del</button></div>';
         list.appendChild(d);
       });
@@ -2192,27 +2265,22 @@
         };
       });
     }
-    container.querySelector('#annBSave').addEventListener('click',()=>{bSaveCur(true);toast('Step saved');});
+    container.querySelector('#annBSave').addEventListener('click',()=>{bSaveCur();toast('Step saved');});
     container.querySelector('#annBNew').addEventListener('click',()=>{bSaveCur();bSteps.push({ann:[],desc:''});bCurI=bSteps.length-1;bActiveAnn=[];container.querySelector('#annBDesc').value='';bSel=null;bDraw();bRenderList();bAutoFill();});
     container.querySelector('#annBDesc').addEventListener('input',()=>{if(!bInFinal&&bCurI<bSteps.length)bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();});
-    container.querySelector('#annFinalTxt').addEventListener('input',()=>{bFinalText=container.querySelector('#annFinalTxt').value;caseObj._annFinalSaved=true;});
+    container.querySelector('#annFinalTxt').addEventListener('input',()=>{caseObj._annFinalSaved=true;});
  
-    // final view
     function bEnterFinal(){bSaveCur();bInFinal=true;if(!bFinalAnn.length)bFinalAnn=bSteps.flatMap(s=>JSON.parse(JSON.stringify(s.ann||[])));bActiveAnn=bFinalAnn;bBuildTb();bDraw();}
     function bExitFinal(){bFinalAnn=JSON.parse(JSON.stringify(bActiveAnn));bInFinal=false;bActiveAnn=JSON.parse(JSON.stringify(bSteps[bCurI].ann||[]));bBuildTb();bDraw();}
     container.querySelector('#annBFinalView').addEventListener('click',()=>{if(bInFinal)bExitFinal();else bEnterFinal();});
  
-    // expose getData so saveInterpBtn can read it
     container._annGetData=()=>{
-      bSaveCur();
-      if(bInFinal)bFinalAnn=JSON.parse(JSON.stringify(bActiveAnn));
+      bSaveCur();if(bInFinal)bFinalAnn=JSON.parse(JSON.stringify(bActiveAnn));
       return{annotationSteps:bSteps,finalAnn:bFinalAnn,finalText:container.querySelector('#annFinalTxt').value};
     };
- 
-    bRenderList();bBuildTb();bDraw();bWireScaleBar();
-    bc._bDraw=bDraw;bc._bResize=bResize;bc._bLoadImg=bLoadCaseImage;// expose for post-mount resize
+    bc._bResize=bResize;bc._bLoadImg=bLoadCaseImg;
+    bRenderList();bBuildTb();bDraw();
   }
- 
 </script>
 </body>
 </html>
