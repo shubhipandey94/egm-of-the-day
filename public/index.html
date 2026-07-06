@@ -472,7 +472,12 @@
         for(const id of ids){
           try{
             const r = await window.storage.get('egm:case:' + id, SHARED);
-            if(r && r.value) loaded.push(JSON.parse(r.value));
+            if(r && r.value){
+              const cas = JSON.parse(r.value);
+              // Strip any _ flags that may have been saved previously
+              Object.keys(cas).filter(k=>k.startsWith('_')).forEach(k=>delete cas[k]);
+              loaded.push(cas);
+            }
           }catch(e){}
         }
         cases = loaded;
@@ -487,6 +492,7 @@
       }
     }catch(e){ cases = []; }
     cases.sort((a,b)=> new Date(b.date) - new Date(a.date));
+    restoreDeviceState();
   }
   async function saveCases(){
     try{
@@ -496,7 +502,11 @@
       let failed = 0;
       for(const cas of cases){
         try{
-          const r = await window.storage.set('egm:case:' + cas.id, JSON.stringify(cas), SHARED);
+          // Strip per-device state before saving to shared DB
+          const toSave = Object.fromEntries(
+            Object.entries(cas).filter(([k])=>!k.startsWith('_'))
+          );
+          const r = await window.storage.set('egm:case:' + cas.id, JSON.stringify(toSave), SHARED);
           if(!r) failed++;
         }catch(e){ failed++; }
       }
@@ -694,11 +704,18 @@
           <span class="date">${fmtDate(c.date)}</span>
         </div>
       </div>
-      <div class="scope-card" style="${getImages(c).length===0?'display:none;':''}">
+      <div class="scope-card" id="scopeCard" style="${getImages(c).length===0?'display:none;':''}position:relative;">
         ${getImages(c).map(src=>`<img src="${src}" alt="EGM tracing" style="display:block;width:100%;margin-bottom:8px;">`).join('')}
         ${c.caption ? `<div class="caption">${escapeHtml(c.caption)}</div>` : ''}
+        ${c.scale && getImages(c).length ? `<canvas id="caliperCV" tabindex="0" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;outline:none;display:none;pointer-events:none;"></canvas>` : ''}
       </div>
-      ${c.scale && getImages(c).length ? `<div id="caliperBtnWrap" style="margin:0 0 12px;"><button id="openCaliperBtn" class="add-opt" style="width:100%;font-size:11px;">Use calipers</button></div><div id="caliperOverlay" style="display:none;margin-bottom:12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#050810;"><div id="caliperCanvasWrap" style="position:relative;height:260px;"><canvas id="caliperCV" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;"></canvas></div><div style="padding:6px 10px;background:#10161f;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:10px;color:#9aa3b0;"><button class="add-opt" id="calUndoBtn">Undo</button><button class="add-opt" id="calClearBtn">Clear</button><span id="calStatus" style="flex:1;text-align:right;color:var(--amber);"></span></div></div>` : ''}
+      ${c.scale && getImages(c).length ? `
+      <div style="margin:4px 0 12px;display:flex;align-items:center;gap:8px;">
+        <button id="openCaliperBtn" class="add-opt" style="flex:1;font-size:11px;">Use calipers</button>
+        <button id="calUndoBtn" class="add-opt" style="display:none;">Undo</button>
+        <button id="calClearBtn" class="add-opt" style="display:none;">Clear</button>
+        <span id="calStatus" style="font-size:11px;color:var(--amber);font-weight:700;"></span>
+      </div>` : ''}
       <p class="prompt-title">${escapeHtml(c.title)}</p>
       ${optionsHtml}
       ${(!hasOptions) ? (c._freeGuess ? `
@@ -744,6 +761,7 @@
         btn.addEventListener('click', ()=>{
           if(c._answeredOption !== undefined) return;
           c._pendingOption = parseInt(btn.dataset.idx);
+          setDeviceState(c.id,'pendingOption', c._pendingOption);
           renderToday();
         });
       });
@@ -754,15 +772,17 @@
           const idx = c._pendingOption;
           c._answeredOption = idx;
           delete c._pendingOption;
+          setDeviceState(c.id,'answeredOption', idx);
+          setDeviceState(c.id,'pendingOption', null);
           if(!isPreviewing){
             // only record real votes outside preview mode
             c.votes = c.votes || {};
             c.votes[idx] = (c.votes[idx] || 0) + 1;
-            if(interpAvailable(c)) c._revealed = true;
+            if(interpAvailable(c)){ c._revealed = true; setDeviceState(c.id,'revealed',true); }
             recordAnswered(c.id);
             await saveCases();
           } else {
-            if(interpAvailable(c)) c._revealed = true;
+            if(interpAvailable(c)){ c._revealed = true; setDeviceState(c.id,'revealed',true); }
           }
           renderToday();
         });
@@ -773,6 +793,7 @@
         const guess = el.querySelector('#freeGuess').value.trim();
         if(!guess){ toast('Add your read before locking in'); return; }
         c._freeGuess = guess;
+        setDeviceState(c.id,'freeGuess', guess);
         if(!isPreviewing) recordAnswered(c.id);
         renderToday();
       });
@@ -783,70 +804,99 @@
  
     const openCaliperBtn=el.querySelector('#openCaliperBtn');
     if(openCaliperBtn && c.scale && getImages(c).length){
-      const overlay=el.querySelector('#caliperOverlay');
-      let calMounted=false, calAnns=[], calUndo2=[];
-      openCaliperBtn.addEventListener('click',()=>{
-        if(overlay.style.display==='none'){
-          overlay.style.display='block'; openCaliperBtn.textContent='Hide calipers';
-          if(!calMounted){
-            calMounted=true;
-            const cv2=el.querySelector('#caliperCV'), ctx2=cv2.getContext('2d');
-            let calImg=null, calIR={x:0,y:0,w:1,h:1}, calDrag=null, calPlacing=null, calSel=null, calIdn=5000;
-            function calResize(){ const wrap=el.querySelector('#caliperCanvasWrap'); const w=Math.floor(wrap.getBoundingClientRect().width||wrap.offsetWidth||0); if(w>20){cv2.width=w;cv2.height=260;} calDraw(); }
-            function calDraw(){
-              const W=cv2.width,H=cv2.height; if(!W||!H)return;
-              ctx2.clearRect(0,0,W,H); ctx2.fillStyle='#050810'; ctx2.fillRect(0,0,W,H);
-              calIR=annImgRect(calImg,W,H);
-              if(calImg){try{ctx2.drawImage(calImg,calIR.x,calIR.y,calIR.w,calIR.h);}catch(e){}}
-              calAnns.forEach(a=>{try{annDraw(ctx2,a,a.id===calSel,calIR);}catch(e){}});
-              if(calPlacing)try{annDraw(ctx2,calPlacing,false,calIR);}catch(e){}
-            }
-            function calGP(e){const r=cv2.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
-            cv2.addEventListener('mousedown',e=>{
-              e.preventDefault(); cv2.focus();
-              const{x,y}=calGP(e); const R=calIR;
-              const fx=(x-R.x)/R.w, fy=(y-R.y)/R.h;
-              let hit=null;
-              for(let i=calAnns.length-1;i>=0;i--){const a=calAnns[i];const cx1=annPx(a.x1,R,'x'),cx2=annPx(a.x2||a.x1,R,'x'),by=annPx(a.barY||0.5,R,'y');if(Math.abs(x-cx1)<14)hit={id:a.id,p:'l'};else if(Math.abs(x-cx2)<14)hit={id:a.id,p:'r'};else if(x>=Math.min(cx1,cx2)-4&&x<=Math.max(cx1,cx2)+4&&Math.abs(y-by)<16)hit={id:a.id,p:'bar'};if(hit)break;}
-              if(hit){calSel=hit.id;const a=calAnns.find(a=>a.id===hit.id);calDrag={id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2||a.x1,oby:a.barY||0.5};}
-              else{calSel=null;calPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:ANN_COLS[0]};calDrag={t:'pl',sx:x,sy:y,ox2:fx};}
-              calDraw();
-            });
-            cv2.addEventListener('mousemove',e=>{
-              if(!calDrag)return; const{x,y}=calGP(e); const R=calIR;
-              const dfx=(x-calDrag.sx)/R.w, dfy=(y-calDrag.sy)/R.h, cy=v=>Math.max(0,Math.min(1,v));
-              if(calDrag.t==='pl'&&calPlacing){calPlacing.x2=calDrag.ox2+dfx;calPlacing.barY=cy((calDrag.sy-R.y)/R.h+dfy);}
-              else if(calDrag.id){const a=calAnns.find(a=>a.id===calDrag.id);if(a){
-                if(calDrag.p==='l')a.x1=calDrag.ox1+dfx;
-                else if(calDrag.p==='r'){a.x2=calDrag.ox2+dfx;a.barY=cy(calDrag.oby+dfy);}
-                else{a.barY=cy(calDrag.oby+dfy);a.x1=calDrag.ox1+dfx;a.x2=calDrag.ox2+dfx;}
-                const pxW=Math.abs(annPx(a.x2,calIR,'x')-annPx(a.x1,calIR,'x'));
-                el.querySelector('#calStatus').textContent=Math.round(pxW/c.scale)+'ms';
-              }}
-              calDraw();
-            });
-            cv2.addEventListener('mouseup',()=>{
-              if(calDrag&&calDrag.t==='pl'&&calPlacing){
-                const R=calIR;
-                if(Math.abs((calPlacing.x2-calPlacing.x1)*R.w)>5){
-                  calUndo2.push(JSON.parse(JSON.stringify(calAnns)));
-                  const a={...calPlacing,id:calIdn++};
-                  a.lbl=Math.round(Math.abs((a.x2-a.x1)*R.w)/c.scale)+'ms';
-                  calAnns.push(a); calSel=a.id;
-                }
-                calPlacing=null;
-              }
-              calDrag=null; calDraw();
-            });
-            el.querySelector('#calUndoBtn').addEventListener('click',()=>{if(calUndo2.length){calAnns=calUndo2.pop();calSel=null;calDraw();}});
-            el.querySelector('#calClearBtn').addEventListener('click',()=>{calUndo2.push(JSON.parse(JSON.stringify(calAnns)));calAnns=[];calSel=null;calDraw();});
-            requestAnimationFrame(()=>requestAnimationFrame(()=>{
-              calResize();
-              const imgs=getImages(c);
-              if(imgs.length){const im=new Image();im.onload=()=>{calImg=im;calResize();};im.src=imgs[0];}
-            }));
+      const cv2=el.querySelector('#caliperCV');
+      const ctx2=cv2.getContext('2d');
+      const scopeCard=el.querySelector('#scopeCard');
+      let calActive=false, calAnns=[], calUndo2=[], calSel=null, calDrag=null, calPlacing=null, calIdn=5000;
+      let calIR={x:0,y:0,w:1,h:1};
+      const undoBtn=el.querySelector('#calUndoBtn'), clearBtn=el.querySelector('#calClearBtn'), statusEl=el.querySelector('#calStatus');
+ 
+      function calSync(){
+        // Match canvas pixel size to the scope-card element
+        const r=scopeCard.getBoundingClientRect();
+        cv2.width=Math.floor(r.width)||1;
+        cv2.height=Math.floor(r.height)||1;
+        // calIR covers the full canvas (images fill the card)
+        calIR={x:0,y:0,w:cv2.width,h:cv2.height};
+      }
+      function calDraw(){
+        const W=cv2.width,H=cv2.height;if(!W||!H)return;
+        ctx2.clearRect(0,0,W,H);
+        // Draw calipers — canvas is transparent over the images
+        calAnns.forEach(a=>{try{annDraw(ctx2,a,a.id===calSel,calIR);}catch(e){}});
+        if(calPlacing)try{annDraw(ctx2,calPlacing,false,calIR);}catch(e){}
+      }
+      function calHit(x,y){
+        const R=calIR;
+        for(let i=calAnns.length-1;i>=0;i--){
+          const a=calAnns[i];
+          const cx1=annPx(a.x1,R,'x'),cx2=annPx(a.x2||a.x1,R,'x'),by=annPx(a.barY||0.5,R,'y');
+          if(Math.abs(x-cx1)<14)return{id:a.id,p:'l'};
+          if(Math.abs(x-cx2)<14)return{id:a.id,p:'r'};
+          if(x>=Math.min(cx1,cx2)-4&&x<=Math.max(cx1,cx2)+4&&Math.abs(y-by)<16)return{id:a.id,p:'bar'};
+        }return null;
+      }
+      function calGP(e){const r=cv2.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
+ 
+      cv2.addEventListener('mousedown',e=>{
+        e.preventDefault();cv2.focus();
+        const{x,y}=calGP(e);const R=calIR;
+        const fx=x/R.w,fy=y/R.h;
+        const hit=calHit(x,y);
+        if(hit){calSel=hit.id;const a=calAnns.find(a=>a.id===hit.id);calDrag={id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2||a.x1,oby:a.barY||0.5};}
+        else{calSel=null;calPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:ANN_COLS[0]};calDrag={t:'pl',sx:x,sy:y,ox2:fx};}
+        calDraw();
+      });
+      cv2.addEventListener('mousemove',e=>{
+        if(!calDrag)return;const{x,y}=calGP(e);const R=calIR;
+        const dfx=(x-calDrag.sx)/R.w,dfy=(y-calDrag.sy)/R.h,cl=v=>Math.max(0,Math.min(1,v));
+        if(calDrag.t==='pl'&&calPlacing){calPlacing.x2=calDrag.ox2+dfx;calPlacing.barY=cl((calDrag.sy/R.h)+dfy);}
+        else if(calDrag.id){const a=calAnns.find(a=>a.id===calDrag.id);if(a){
+          if(calDrag.p==='l')a.x1=calDrag.ox1+dfx;
+          else if(calDrag.p==='r'){a.x2=calDrag.ox2+dfx;a.barY=cl(calDrag.oby+dfy);}
+          else{a.barY=cl(calDrag.oby+dfy);a.x1=calDrag.ox1+dfx;a.x2=calDrag.ox2+dfx;}
+          const pxW=Math.abs((a.x2-a.x1)*R.w);
+          if(statusEl)statusEl.textContent=Math.round(pxW/c.scale)+'ms';
+        }}
+        calDraw();
+      });
+      cv2.addEventListener('mouseup',()=>{
+        if(calDrag&&calDrag.t==='pl'&&calPlacing){
+          const R=calIR;
+          if(Math.abs((calPlacing.x2-calPlacing.x1)*R.w)>5){
+            calUndo2.push(JSON.parse(JSON.stringify(calAnns)));
+            const a={...calPlacing,id:calIdn++};
+            a.lbl=Math.round(Math.abs((a.x2-a.x1)*R.w)/c.scale)+'ms';
+            calAnns.push(a);calSel=a.id;
           }
-        } else { overlay.style.display='none'; openCaliperBtn.textContent='Use calipers'; }
+          calPlacing=null;
+        }
+        calDrag=null;calDraw();
+      });
+      cv2.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];cv2.dispatchEvent(new MouseEvent('mousedown',{clientX:t.clientX,clientY:t.clientY}));},{passive:false});
+      cv2.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];cv2.dispatchEvent(new MouseEvent('mousemove',{clientX:t.clientX,clientY:t.clientY}));},{passive:false});
+      cv2.addEventListener('touchend',()=>cv2.dispatchEvent(new MouseEvent('mouseup')));
+      cv2.addEventListener('keydown',e=>{
+        if((e.key==='Delete'||e.key==='Backspace')&&calSel){
+          e.preventDefault();
+          calUndo2.push(JSON.parse(JSON.stringify(calAnns)));
+          calAnns=calAnns.filter(a=>a.id!==calSel);calSel=null;calDraw();
+        }
+      });
+ 
+      if(undoBtn)undoBtn.addEventListener('click',()=>{if(calUndo2.length){calAnns=calUndo2.pop();calSel=null;calDraw();}});
+      if(clearBtn)clearBtn.addEventListener('click',()=>{calUndo2.push(JSON.parse(JSON.stringify(calAnns)));calAnns=[];calSel=null;calDraw();});
+ 
+      openCaliperBtn.addEventListener('click',()=>{
+        calActive=!calActive;
+        cv2.style.display=calActive?'block':'none';
+        cv2.style.pointerEvents=calActive?'auto':'none';
+        openCaliperBtn.textContent=calActive?'Hide calipers':'Use calipers';
+        if(undoBtn)undoBtn.style.display=calActive?'inline-block':'none';
+        if(clearBtn)clearBtn.style.display=calActive?'inline-block':'none';
+        if(calActive){
+          requestAnimationFrame(()=>{calSync();calDraw();cv2.focus();});
+        }
       });
     }
  
@@ -854,6 +904,7 @@
       const revealBtn = el.querySelector('#revealBtn');
       if(revealBtn) revealBtn.addEventListener('click', ()=>{
         c._revealed = !c._revealed;
+        setDeviceState(c.id,'revealed', c._revealed);
         renderToday();
       });
     }
@@ -1671,6 +1722,25 @@
   function escapeHtml(s){
     if(!s) return '';
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+ 
+  // Per-device state stored in localStorage (never saved to DB)
+  function lsKey(caseId, field){ return 'egm:' + caseId + ':' + field; }
+  function getDeviceState(caseId, field){ try{ return JSON.parse(localStorage.getItem(lsKey(caseId,field))); }catch(e){ return null; } }
+  function setDeviceState(caseId, field, val){ try{ localStorage.setItem(lsKey(caseId,field), JSON.stringify(val)); }catch(e){} }
+ 
+  // Restore per-device state onto case objects after loading
+  function restoreDeviceState(){
+    cases.forEach(c=>{
+      const ans = getDeviceState(c.id,'answeredOption');
+      const pend = getDeviceState(c.id,'pendingOption');
+      const rev = getDeviceState(c.id,'revealed');
+      const guess = getDeviceState(c.id,'freeGuess');
+      if(ans !== null) c._answeredOption = ans;
+      if(pend !== null) c._pendingOption = pend;
+      if(rev) c._revealed = true;
+      if(guess) c._freeGuess = guess;
+    });
   }
  
   function getImages(c){ return c.images&&c.images.length?c.images:(c.image?[c.image]:[]); }
