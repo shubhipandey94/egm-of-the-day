@@ -1954,16 +1954,19 @@
     // Load image from case
     function bResize(){
       const wrap=container.querySelector('#annBCanvas');
-      const w=wrap.offsetWidth||wrap.clientWidth||300;
-      bc.width=Math.max(w,100);bc.height=220;
-      // Load image on first valid resize
+      const w=wrap.offsetWidth||wrap.clientWidth||0;
+      if(w<10){
+        // container not visible yet — retry shortly
+        setTimeout(bResize,100);return;
+      }
+      bc.width=w;bc.height=240;
       if(!bImg){
         const imgs=getImages(caseObj);
         if(imgs.length){
           const im=new Image();
           im.onload=()=>{bImg=im;bDraw();};
           im.src=imgs[0];
-          return;// bDraw will be called after image loads
+          return;
         }
       }
       bDraw();
@@ -1984,36 +1987,50 @@
       }
     }
  
+    function bLoadImageFile(){
+      const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+      inp.style.cssText='position:fixed;top:-100px;left:-100px;opacity:0;';
+      document.body.appendChild(inp);
+      inp.onchange=async e=>{
+        document.body.removeChild(inp);
+        const f=e.target.files[0];if(!f)return;
+        const jpeg=await convertToJpeg(f);
+        const im=new Image();im.onload=()=>{bImg=im;bDraw();};im.src=jpeg;
+      };inp.click();
+    }
+ 
     function bBuildTb(){
       const tbi=container.querySelector('#annBTbi');tbi.innerHTML='';
       const b=(l,cls)=>{const e=document.createElement('button');e.className='abtb'+(cls?' '+cls:'');e.textContent=l;e.addEventListener('click',()=>setTimeout(()=>bc.focus(),0));return e;};
       const sep=()=>{const d=document.createElement('div');d.className='absep';return d;};
-      if(!bInFinal){
+      // shared: draw tools + colors
+      const drawTools=()=>{
         [['Arrow','arrow'],['Circle','circle'],['Caliper','cal']].forEach(([l,t])=>{
           const e=b(l);if(bTool===t)e.classList.add('on');e.onclick=()=>{bTool=t;bBuildTb();bc.focus();};tbi.appendChild(e);
         });
         tbi.appendChild(sep());
-        COLS.forEach(c=>{const d=document.createElement('div');d.className='abdot'+(bCol===c?' on':'');d.style.background=c;d.onclick=()=>{bCol=c;if(bSel){const a=bActiveAnn.find(a=>a.id===bSel);if(a){a.c=c;bDraw();}}bBuildTb();bc.focus();};tbi.appendChild(d);});
+        COLS.forEach(c=>{const d=document.createElement('div');d.className='abdot'+(bCol===c?' on':'');d.style.background=c;
+          d.onclick=()=>{bCol=c;if(bSel){const a=bActiveAnn.find(a=>a.id===bSel);if(a){a.c=c;bDraw();}}bBuildTb();bc.focus();};
+          tbi.appendChild(d);});
         tbi.appendChild(sep());
+      };
+      if(!bInFinal){
+        drawTools();
         const u=b('Undo');u.onclick=()=>{if(bUndo.length){bActiveAnn=bUndo.pop();bSteps[bCurI].ann=bActiveAnn;bSel=null;bDraw();}bc.focus();};tbi.appendChild(u);
         const cl=b('Clear','red');cl.onclick=()=>{bPushU();bActiveAnn=[];bSteps[bCurI].ann=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
+        tbi.appendChild(sep());
+        const li=b('Load image');li.onclick=bLoadImageFile;tbi.appendChild(li);
       } else {
-        [['Arrow','arrow'],['Circle','circle'],['Caliper','cal']].forEach(([l,t])=>{
-          const e=b(l);if(bTool===t)e.classList.add('on');e.onclick=()=>{bTool=t;bBuildTb();bc.focus();};tbi.appendChild(e);
-        });
-        tbi.appendChild(sep());
-        COLS.forEach(c=>{const d=document.createElement('div');d.className='abdot'+(bCol===c?' on':'');d.style.background=c;d.onclick=()=>{bCol=c;if(bSel){const a=bActiveAnn.find(a=>a.id===bSel);if(a){a.c=c;bDraw();}}bBuildTb();bc.focus();};tbi.appendChild(d);});
-        tbi.appendChild(sep());
+        drawTools();
         const u=b('Undo');u.onclick=()=>{if(bUndo.length){bActiveAnn=bUndo.pop();bFinalAnn=bActiveAnn;bSel=null;bDraw();}bc.focus();};tbi.appendChild(u);
         const cl=b('Clear','red');cl.onclick=()=>{bPushU();bActiveAnn=[];bFinalAnn=[];bSel=null;bDraw();bc.focus();};tbi.appendChild(cl);
         tbi.appendChild(sep());
         const ex=b('← Exit final','grn');ex.onclick=bExitFinal;tbi.appendChild(ex);
       }
-      // scale toolbar
-      const sc=container.querySelector('#annBTbi');
+      // scale toolbar to fit
       const sw=container.querySelector('#annBToolbar').clientWidth-16;
       const nat=tbi.scrollWidth;
-      if(nat>sw)tbi.style.transform=`scale(${Math.max(0.55,sw/nat)})`;else tbi.style.transform='scale(1)';
+      if(nat>sw)tbi.style.transform=`scale(${Math.max(0.5,sw/nat)})`;else tbi.style.transform='scale(1)';
       tbi.style.transformOrigin='left center';
     }
  
