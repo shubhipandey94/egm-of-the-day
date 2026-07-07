@@ -2019,7 +2019,7 @@
   function annMH(c,cx,cy,col){c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.fillStyle='rgba(0,0,0,0.55)';c.fill();c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle=col;c.font='bold 9px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('\u2295',cx,cy);c.textAlign='left';c.textBaseline='alphabetic';}
  
   // Viewer
-  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false,annVShowFinal=false,annVCaseRef=null;
+  let annVImg=null,annVImgCache={},annVCaseImgSrc=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false,annVShowFinal=false,annVCaseRef=null;
   let annVC=null,annVCtx=null;
   function annGetCtx(){if(!annVC){annVC=document.getElementById('annVC');if(annVC)annVCtx=annVC.getContext('2d');}return annVCtx;}
  
@@ -2030,10 +2030,22 @@
     annVShowFinal=caseObj.showFinalView||false;
     annVCaseRef=caseObj;
     annVStep=0;annVFin=false;
-    const imgs=getImages(caseObj);
-    if(imgs.length){const im=new Image();im.onload=()=>{annVImg=im;annVSize();annVRender();};im.src=imgs[0];}
-    else{annVImg=null;annVSize();annVRender();}
+    annVImg=null;annVImgCache={};
+    annVCaseImgSrc=getImages(caseObj)[0]||null;
     const ov=document.getElementById('annOverlay');ov.style.display='flex';
+    annVSize();
+    annVLoadStepImg(0,()=>annVRender());
+  }
+ 
+  function annVLoadStepImg(stepIdx, cb){
+    const s=annVSteps[stepIdx];
+    const src=(s&&s.imgSrc)||annVCaseImgSrc;
+    if(!src){annVImg=null;cb();return;}
+    if(annVImgCache[src]){annVImg=annVImgCache[src];cb();return;}
+    const im=new Image();
+    im.onload=()=>{annVImgCache[src]=im;annVImg=im;cb();};
+    im.onerror=()=>{annVImg=null;cb();};
+    im.src=src;
   }
   function annVSize(){
     if(!annGetCtx())return;
@@ -2062,8 +2074,8 @@
       desc.textContent=s.desc||'';
       prog.textContent='Step '+(annVStep+1)+' of '+annVSteps.length;
       nxt.textContent=annVStep<annVSteps.length-1?'Next \u2192':'Show interpretation';
-      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else if(annVShowFinal){annVFin=true;annVRender();}else{document.getElementById('annOverlay').style.display='none';annVImg=null;if(annVCaseRef){annVCaseRef._annDone=true;renderToday();}}};
-      prv.disabled=annVStep===0;prv.onclick=()=>{if(annVStep>0){annVStep--;annVRender();}};
+      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVLoadStepImg(annVStep,()=>annVRender());}else if(annVShowFinal){annVFin=true;annVRender();}else{document.getElementById('annOverlay').style.display='none';annVImg=null;if(annVCaseRef){annVCaseRef._annDone=true;renderToday();}}};
+      prv.disabled=annVStep===0;prv.onclick=()=>{if(annVStep>0){annVStep--;annVLoadStepImg(annVStep,()=>annVRender());}};
     }
   }
   window.addEventListener('resize',()=>{const ov=document.getElementById('annOverlay');if(ov&&ov.style.display==='flex'){annVSize();annVRender();}});
