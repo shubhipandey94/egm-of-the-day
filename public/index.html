@@ -273,6 +273,20 @@
 </style>
 </head>
 <body class="scope">
+<div id="annOverlay" style="position:fixed;inset:0;background:#050810;z-index:1000;display:none;flex-direction:column;">
+  <div id="annCanvasWrap" style="flex:1;position:relative;overflow:hidden;background:#050810;">
+    <canvas id="annVC" style="position:absolute;top:0;left:0;"></canvas>
+  </div>
+  <div id="annBottom" style="background:#10161f;border-top:1px solid #2a3544;padding:10px 14px;flex-shrink:0;">
+    <div id="annDesc" style="font-size:13px;color:#e8e6df;line-height:1.6;margin-bottom:8px;min-height:28px;"></div>
+    <div id="annFinalText" style="font-size:13px;color:#e8e6df;line-height:1.6;margin-bottom:8px;white-space:pre-wrap;display:none;"></div>
+    <div id="annNav" style="display:flex;align-items:center;gap:10px;">
+      <button id="annPrev" style="background:#171f2b;color:#e8e6df;border:1px solid #2a3544;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:700;text-transform:uppercase;" disabled>Prev</button>
+      <span id="annProg" style="font-size:9.5px;color:#9aa3b0;flex:1;text-align:center;"></span>
+      <button id="annNext" style="background:#e8a23d;color:#0a0e14;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:700;text-transform:uppercase;">Next</button>
+    </div>
+  </div>
+</div>
 <div id="gate" class="name-gate" style="display:none;">
   <div class="box">
     <h2>EGM of the Day</h2>
@@ -1741,7 +1755,6 @@
       const pend = getDeviceState(c.id,'pendingOption');
       const rev = getDeviceState(c.id,'revealed');
       const guess = getDeviceState(c.id,'freeGuess');
-      console.log('[restore] case', c.id, {ans, pend, rev, guess});
       if(ans !== null) c._answeredOption = ans;
       if(pend !== null) c._pendingOption = pend;
       if(rev) c._revealed = true;
@@ -2053,7 +2066,7 @@
       prv.disabled=annVStep===0;prv.onclick=()=>{if(annVStep>0){annVStep--;annVRender();}};
     }
   }
-  window.addEventListener('resize',()=>{if(document.getElementById('annOverlay').style.display==='flex'){annVSize();annVRender();}});
+  window.addEventListener('resize',()=>{const ov=document.getElementById('annOverlay');if(ov&&ov.style.display==='flex'){annVSize();annVRender();}});
  
   // Scale tool
   function mountScaleTool(canvasEl, imagesArr){
@@ -2163,17 +2176,12 @@
     }
     function bLoadCaseImg(){
       const imgs=getImages(caseObj);
-      console.log('[ann] bLoadCaseImg called, imgs:', imgs.length, 'caseObj.images:', caseObj.images, 'caseObj.image:', caseObj.image);
-      if(!imgs.length){ console.log('[ann] no images found on caseObj'); return; }
+      if(!imgs.length) return;
       const im=new Image();
       im.onload=()=>{
-        console.log('[ann] image loaded, size:', im.width, 'x', im.height);
         bImg=im;
-        setTimeout(()=>{ bResize(); bDraw(); console.log('[ann] drawn, bc size:', bc.width, 'x', bc.height); }, 50);
+        setTimeout(()=>{ bResize(); bDraw(); }, 50);
       };
-      im.onerror=(e)=>{ console.log('[ann] image load ERROR:', e); };
-      im.src=imgs[0].substring(0,50)+'...';
-      console.log('[ann] setting img src, first 50 chars:', imgs[0].substring(0,50));
       im.src=imgs[0];
     }
     function bDraw(){
