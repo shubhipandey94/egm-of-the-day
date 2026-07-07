@@ -475,7 +475,12 @@
             if(r && r.value){
               const cas = JSON.parse(r.value);
               // Strip any _ flags that may have been saved previously
-              Object.keys(cas).filter(k=>k.startsWith('_')).forEach(k=>delete cas[k]);
+              const dirtyKeys = Object.keys(cas).filter(k=>k.startsWith('_'));
+              if(dirtyKeys.length){
+                dirtyKeys.forEach(k=>delete cas[k]);
+                // Re-save this case immediately to clean the DB
+                try{ await window.storage.set('egm:case:' + id, JSON.stringify(cas), SHARED); }catch(e){}
+              }
               loaded.push(cas);
             }
           }catch(e){}
@@ -1736,6 +1741,7 @@
       const pend = getDeviceState(c.id,'pendingOption');
       const rev = getDeviceState(c.id,'revealed');
       const guess = getDeviceState(c.id,'freeGuess');
+      console.log('[restore] case', c.id, {ans, pend, rev, guess});
       if(ans !== null) c._answeredOption = ans;
       if(pend !== null) c._pendingOption = pend;
       if(rev) c._revealed = true;
