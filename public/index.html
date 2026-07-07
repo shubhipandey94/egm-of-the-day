@@ -1630,20 +1630,20 @@
         if(mount.style.display==='none'){
           mount.style.display='block'; btn.textContent='Hide steps';
           if(!annBuilderMounted){ mountAnnBuilder(mount, c); annBuilderMounted=true; }
-          requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          setTimeout(()=>{
             const bc2=mount.querySelector('#annBC');
             if(bc2){ if(bc2._bResize)bc2._bResize(); if(bc2._bLoadImg)bc2._bLoadImg(); }
-          }));
+          }, 150);
         } else { mount.style.display='none'; btn.textContent='Add steps'; }
       });
       if(c.annotationSteps && c.annotationSteps.length){
         const mount=el.querySelector('#annBuilderMount'), btn=el.querySelector('#annToggleBtn');
         mount.style.display='block'; btn.textContent='Hide steps';
         mountAnnBuilder(mount, c); annBuilderMounted=true;
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        setTimeout(()=>{
           const bc2=mount.querySelector('#annBC');
           if(bc2){ if(bc2._bResize)bc2._bResize(); if(bc2._bLoadImg)bc2._bLoadImg(); }
-        }));
+        }, 150);
       }
  
       el.querySelector('#saveInterpBtn').addEventListener('click', async ()=>{
@@ -2163,9 +2163,18 @@
     }
     function bLoadCaseImg(){
       const imgs=getImages(caseObj);
-      if(imgs.length&&!bImg){
-        const im=new Image();im.onload=()=>{bImg=im;bResize();bDraw();};im.src=imgs[0];
-      }
+      console.log('[ann] bLoadCaseImg called, imgs:', imgs.length, 'caseObj.images:', caseObj.images, 'caseObj.image:', caseObj.image);
+      if(!imgs.length){ console.log('[ann] no images found on caseObj'); return; }
+      const im=new Image();
+      im.onload=()=>{
+        console.log('[ann] image loaded, size:', im.width, 'x', im.height);
+        bImg=im;
+        setTimeout(()=>{ bResize(); bDraw(); console.log('[ann] drawn, bc size:', bc.width, 'x', bc.height); }, 50);
+      };
+      im.onerror=(e)=>{ console.log('[ann] image load ERROR:', e); };
+      im.src=imgs[0].substring(0,50)+'...';
+      console.log('[ann] setting img src, first 50 chars:', imgs[0].substring(0,50));
+      im.src=imgs[0];
     }
     function bDraw(){
       const W=bc.width,H=bc.height;if(W<1||H<1)return;
