@@ -2128,7 +2128,7 @@
   // Builder
   function mountAnnBuilder(container, caseObj){
     const COLS=ANN_COLS;
-    let bImg=null,bIR={x:0,y:0,w:1,h:1};
+    let bImg=null,bImgSrc=null,bIR={x:0,y:0,w:1,h:1};
     let bSteps=JSON.parse(JSON.stringify(caseObj.annotationSteps||[{ann:[],desc:''}]));
     if(!bSteps.length)bSteps=[{ann:[],desc:''}];
     let bCurI=0,bActiveAnn=bSteps[0].ann,bSel=null;
@@ -2147,6 +2147,12 @@
           '<button class="abtb" id="annBSetSc" style="height:18px;padding:0 6px;">Set</button>'+
           '<button class="abtb" id="annBCanSc" style="height:18px;padding:0 6px;">Cancel</button></div>'+
         '<div id="annBCanvas"><canvas id="annBC" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;touch-action:none;"></canvas></div>'+
+        '<div id="annLblBar" style="display:none;background:#171f2b;border-bottom:1px solid #2a3544;padding:0 8px;height:28px;align-items:center;gap:6px;font-size:9px;color:#9aa3b0;">'+
+        '<span>Caliper label:</span>'+
+        '<input id="annLblIn" type="text" placeholder="e.g. 320ms" style="flex:1;background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 6px;border-radius:4px;font-size:9px;outline:none;height:20px;">'+
+        '<button class="abtb" id="annLblSet" style="height:20px;padding:0 6px;">Set</button>'+
+        '<button class="abtb" id="annLblClr" style="height:20px;padding:0 6px;">Clear</button>'+
+        '</div>'+
         '<div id="annBSteps">'+
           '<div id="annBStepList"></div>'+
           '<div id="annBForm">'+
@@ -2180,14 +2186,14 @@
       bDraw();
     }
     function bLoadCaseImg(){
-      const imgs=getImages(caseObj);
-      if(!imgs.length) return;
+      const stepSrc=bSteps[bCurI]&&bSteps[bCurI].imgSrc;
+      const caseSrc=getImages(caseObj)[0]||null;
+      const src=stepSrc||caseSrc;
+      if(!src) return;
+      if(src===bImgSrc&&bImg){bResize();bDraw();return;}
       const im=new Image();
-      im.onload=()=>{
-        bImg=im;
-        setTimeout(()=>{ bResize(); bDraw(); }, 50);
-      };
-      im.src=imgs[0];
+      im.onload=()=>{bImg=im;bImgSrc=src;setTimeout(()=>{bResize();bDraw();},50);};
+      im.src=src;
     }
     function bDraw(){
       const W=bc.width,H=bc.height;if(W<1||H<1)return;
@@ -2236,6 +2242,9 @@
           inp.addEventListener('change',async()=>{
             const f=inp.files[0];document.body.removeChild(inp);if(!f)return;
             const jpeg=await convertToJpeg(f);
+            // Store per-step
+            if(bCurI<bSteps.length) bSteps[bCurI].imgSrc=jpeg;
+            bImgSrc=jpeg;
             const im=new Image();im.onload=()=>{bImg=im;bDraw();};im.src=jpeg;
           });inp.click();
         };tbi.appendChild(li);
@@ -2261,6 +2270,37 @@
       toast('Scale calibrated: '+Math.round(ms)+'ms');bBuildTb();bDraw();
     };
     container.querySelector('#annBCanSc').onclick=()=>{bScaleMode=false;bScaleCal=null;container.querySelector('#annBScaleBar').style.display='none';bBuildTb();bDraw();};
+ 
+    // Caliper label bar
+    function bUpdateLblBar(){
+      const bar=container.querySelector('#annLblBar');
+      if(!bar)return;
+      if(bSel){
+        const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');
+        if(a){
+          bar.style.display='flex';
+          container.querySelector('#annLblIn').value=a.lbl||'';
+          return;
+        }
+      }
+      bar.style.display='none';
+    }
+    container.querySelector('#annLblSet').onclick=()=>{
+      if(!bSel)return;
+      const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');
+      if(!a)return;
+      const val=container.querySelector('#annLblIn').value.trim();
+      a.lbl=val||null;
+      bDraw();
+    };
+    container.querySelector('#annLblClr').onclick=()=>{
+      if(!bSel)return;
+      const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');
+      if(!a)return;
+      delete a.lbl;
+      container.querySelector('#annLblIn').value='';
+      bDraw();
+    };
  
     function bHit(px,py){
       const R=bIR;
@@ -2293,7 +2333,7 @@
       else{bSel=null;if(bTool==='arrow'){bPlacing={t:'arrow',id:'p',tx:fx,ty:fy,x1:fx,y1:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}
         else if(bTool==='circle'){bPlacing={t:'circ',id:'p',x1:fx,y1:fy,x2:fx,y2:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}
         else if(bTool==='cal'){bPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:bCol,scl:caseObj.scale||null};bDrag={t:'pl',sx:x,sy:y,ox2:fx};}}
-      bDraw();
+      bUpdateLblBar();bDraw();
     }
     function bPM(e){
       e.preventDefault();const{x,y}=bGP(e);if(!bDrag)return;
@@ -2328,7 +2368,7 @@
         if(ok){bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));const a={...bPlacing,id:bIdn++};bActiveAnn.push(a);bSel=a.id;if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;}
         bPlacing=null;
       }
-      bDrag=null;bDraw();
+      bDrag=null;bUpdateLblBar();bDraw();
     }
     bc.addEventListener('mousedown',bPD);
     bc.addEventListener('mousemove',e=>{if(!bDrag){const{x,y}=bGP(e);const h=bHit(x,y);bc.style.cursor=h?(h.p==='mv'?'move':'pointer'):'crosshair';}bPM(e);});
@@ -2336,7 +2376,7 @@
     bc.addEventListener('touchstart',bPD,{passive:false});bc.addEventListener('touchmove',bPM,{passive:false});bc.addEventListener('touchend',bPU);
     bc.addEventListener('keydown',e=>{
       if(document.activeElement.tagName==='TEXTAREA')return;
-      if((e.key==='Delete'||e.key==='Backspace')&&bSel){e.preventDefault();bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;bSel=null;bDraw();}
+      if((e.key==='Delete'||e.key==='Backspace')&&bSel){e.preventDefault();bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;bSel=null;bUpdateLblBar();bDraw();}
       if((e.key==='m'||e.key==='M')&&bSel){const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');if(a){bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));a.march=!a.march;bDraw();}}
     });
     // Document-level fallback for delete when canvas may not have focus
@@ -2350,8 +2390,21 @@
     const bObserver=new MutationObserver(()=>{ if(!document.contains(bc)){ document.removeEventListener('keydown',bDocKey); bObserver.disconnect(); } });
     bObserver.observe(document.body,{childList:true,subtree:true});
  
-    function bSaveCur(){if(bInFinal||bCurI>=bSteps.length)return;bSteps[bCurI].ann=JSON.parse(JSON.stringify(bActiveAnn));bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();}
-    function bLoadStep(i){bCurI=i;bActiveAnn=JSON.parse(JSON.stringify(bSteps[i].ann||[]));container.querySelector('#annBDesc').value=bSteps[i].desc||'';bSel=null;bDraw();bRenderList();}
+    function bSaveCur(){if(bInFinal||bCurI>=bSteps.length)return;bSteps[bCurI].ann=JSON.parse(JSON.stringify(bActiveAnn));bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bSteps[bCurI].imgSrc=bImg?bImgSrc:null;bAutoFill();bRenderList();}
+    function bLoadStep(i){
+      bCurI=i;bActiveAnn=JSON.parse(JSON.stringify(bSteps[i].ann||[]));
+      container.querySelector('#annBDesc').value=bSteps[i].desc||'';
+      bSel=null;
+      // Load per-step image or fall back to case image
+      const stepSrc=bSteps[i].imgSrc;
+      const caseSrc=getImages(caseObj)[0]||null;
+      const src=stepSrc||caseSrc;
+      if(src){
+        if(src===bImgSrc&&bImg){bDraw();}// already loaded
+        else{const im=new Image();im.onload=()=>{bImg=im;bImgSrc=src;bDraw();};im.src=src;}
+      } else {bImg=null;bImgSrc=null;bDraw();}
+      bRenderList();
+    }
     function bAutoFill(){const t=bSteps.map(s=>s.desc||'').filter(Boolean).join('\n\n');if(!caseObj._annFinalSaved){container.querySelector('#annFinalTxt').value=t;}}
     function bRenderList(){
       const list=container.querySelector('#annBStepList');list.innerHTML='';
