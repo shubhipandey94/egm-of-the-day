@@ -749,6 +749,9 @@
       ${revealBtnHtml}
       <div id="interpBlock"></div>
       <div id="diffBlock"></div>
+      <div style="margin:0 0 14px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--line);">
+        <p style="font-size:11px;color:#6a7585;line-height:1.6;margin:0;">Tracings and interpretations contributed by EP fellows in training. Not peer-reviewed — use the discussion below to flag errors or share your read.</p>
+      </div>
       <div class="comments">
         <h3>Discussion (${(c.comments||[]).length})</h3>
         <div id="commentList"></div>
@@ -780,7 +783,7 @@
         btn.addEventListener('click', ()=>{
           if(c._answeredOption !== undefined) return;
           c._pendingOption = parseInt(btn.dataset.idx);
-          setDeviceState(c.id,'pendingOption', c._pendingOption);
+          if(!isPreviewing) setDeviceState(c.id,'pendingOption', c._pendingOption);
           renderToday();
         });
       });
@@ -791,8 +794,10 @@
           const idx = c._pendingOption;
           c._answeredOption = idx;
           delete c._pendingOption;
-          setDeviceState(c.id,'answeredOption', idx);
-          setDeviceState(c.id,'pendingOption', null);
+          if(!isPreviewing){
+            setDeviceState(c.id,'answeredOption', idx);
+            setDeviceState(c.id,'pendingOption', null);
+          }
           if(!isPreviewing){
             // only record real votes outside preview mode
             c.votes = c.votes || {};
@@ -801,7 +806,7 @@
             recordAnswered(c.id);
             await saveCases();
           } else {
-            if(interpAvailable(c)){ c._revealed = true; setDeviceState(c.id,'revealed',true); }
+            if(interpAvailable(c)) c._revealed = true;
           }
           renderToday();
         });
@@ -812,7 +817,7 @@
         const guess = el.querySelector('#freeGuess').value.trim();
         if(!guess){ toast('Add your read before locking in'); return; }
         c._freeGuess = guess;
-        setDeviceState(c.id,'freeGuess', guess);
+        if(!isPreviewing) setDeviceState(c.id,'freeGuess', guess);
         if(!isPreviewing) recordAnswered(c.id);
         renderToday();
       });
@@ -944,9 +949,21 @@
     function renderInterp(){
       const block = el.querySelector('#interpBlock');
       if(!available || !c._revealed){ block.innerHTML=''; renderDiff(); return; }
-      if(!c._annDone && c.annotationSteps && c.annotationSteps.length && c.annotationSteps.some(s=>s.ann&&s.ann.length)){
-        block.innerHTML='<div style="padding:8px 0;"><div style="font-size:11px;color:var(--teal);">Annotation walkthrough launched →</div></div>';
-        startAnnViewer(c); renderDiff(); return;
+      if(c.annotationSteps && c.annotationSteps.length && c.annotationSteps.some(s=>s.ann&&s.ann.length)){
+        if(!c._annDone){
+          // Show correct answer highlight first, then offer walkthrough button
+          const hasInterp = !!(c.interp&&(c.interp.text||c.interp.images&&c.interp.images.length));
+          block.innerHTML=`<div style="margin-bottom:12px;">
+            <button id="startWalkthroughBtn" style="width:100%;background:var(--amber);color:#0a0e14;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+              Step-by-step EGM review →
+            </button>
+          </div>`;
+          block.querySelector('#startWalkthroughBtn').addEventListener('click',()=>{
+            startAnnViewer(c);
+          });
+          renderDiff(); return;
+        }
+        // _annDone: fall through to plain interp below, but add replay button
       }
       const i = c.interp || {};
       const hasInterpContent = !!(i.text || i.mechanism || i.evidence || i.management || i.image || (i.images && i.images.length));
@@ -967,6 +984,17 @@
           })()}
         </div>
       `;
+      // If annotation walkthrough was done, add replay button
+      if(c._annDone && c.annotationSteps && c.annotationSteps.length && c.annotationSteps.some(s=>s.ann&&s.ann.length)){
+        const replayDiv=document.createElement('div');
+        replayDiv.style.cssText='margin-top:12px;';
+        replayDiv.innerHTML='<button id="replayWalkthroughBtn" style="width:100%;background:transparent;color:var(--teal);border:1px solid var(--teal);padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">Replay EGM review ↺</button>';
+        replayDiv.querySelector('#replayWalkthroughBtn').addEventListener('click',()=>{
+          c._annDone=false;
+          renderToday();
+        });
+        block.appendChild(replayDiv);
+      }
       renderDiff();
     }
  
