@@ -1675,6 +1675,7 @@
             c.annotationSteps = annData.annotationSteps;
             c.finalAnn = annData.finalAnn;
             c.finalText = annData.finalText;
+            c.showFinalView = annData.showFinalView||false;
           } else { delete c.annotationSteps; delete c.finalAnn; delete c.finalText; }
         }
         const okI=await saveCases();
@@ -2018,7 +2019,7 @@
   function annMH(c,cx,cy,col){c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.fillStyle='rgba(0,0,0,0.55)';c.fill();c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle=col;c.font='bold 9px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('\u2295',cx,cy);c.textAlign='left';c.textBaseline='alphabetic';}
  
   // Viewer
-  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false;
+  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false,annVShowFinal=false;
   let annVC=null,annVCtx=null;
   function annGetCtx(){if(!annVC){annVC=document.getElementById('annVC');if(annVC)annVCtx=annVC.getContext('2d');}return annVCtx;}
  
@@ -2026,6 +2027,7 @@
     annVSteps=caseObj.annotationSteps||[];
     annVFinalAnn=caseObj.finalAnn||[];
     annVFinalText=caseObj.finalText||caseObj.interp&&caseObj.interp.text||'';
+    annVShowFinal=caseObj.showFinalView||false;
     annVStep=0;annVFin=false;
     const imgs=getImages(caseObj);
     if(imgs.length){const im=new Image();im.onload=()=>{annVImg=im;annVSize();annVRender();};im.src=imgs[0];}
@@ -2059,7 +2061,7 @@
       desc.textContent=s.desc||'';
       prog.textContent='Step '+(annVStep+1)+' of '+annVSteps.length;
       nxt.textContent=annVStep<annVSteps.length-1?'Next \u2192':'Show interpretation';
-      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else{annVFin=true;annVRender();}};
+      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else if(annVShowFinal){annVFin=true;annVRender();}else{document.getElementById('annOverlay').style.display='none';annVImg=null;}};
       prv.disabled=annVStep===0;prv.onclick=()=>{if(annVStep>0){annVStep--;annVRender();}};
     }
   }
@@ -2154,9 +2156,14 @@
             '</div>'+
           '</div>'+
           '<div id="annFinalSection">'+
-            '<div style="font-size:8.5px;color:#9aa3b0;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Final interpretation text</div>'+
-            '<textarea id="annFinalTxt" placeholder="Combined text shown after all steps..."></textarea>'+
-            '<button class="abs-save-btn" id="annBFinalView" style="margin-top:4px;width:100%;">Final view \u2192</button>'+
+            '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'+
+              '<input type="checkbox" id="annShowFinal" style="cursor:pointer;">'+
+              '<label for="annShowFinal" style="font-size:8.5px;color:#9aa3b0;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;">Show final combined view after steps</label>'+
+            '</div>'+
+            '<div id="annFinalControls" style="display:none;">'+
+              '<textarea id="annFinalTxt" placeholder="Combined text shown after all steps..."></textarea>'+
+              '<button class="abs-save-btn" id="annBFinalView" style="margin-top:4px;width:100%;">Final view \u2192</button>'+
+            '</div>'+
           '</div>'+
         '</div>'+
       '</div>';
@@ -2281,7 +2288,7 @@
         bDraw();return;
       }
       const hit=bHit(x,y);
-      if(hit){bSel=hit.id;const a=bActiveAnn.find(a=>a.id===hit.id);bDrag={t:'ed',id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2,oy1:a.y1,oy2:a.y2,otx:a.tx,oty:a.ty,oby:a.barY||0.5};}
+      if(hit){bSel=hit.id;bc.focus();const a=bActiveAnn.find(a=>a.id===hit.id);bDrag={t:'ed',id:hit.id,p:hit.p,sx:x,sy:y,ox1:a.x1,ox2:a.x2,oy1:a.y1,oy2:a.y2,otx:a.tx,oty:a.ty,oby:a.barY||0.5};}
       else{bSel=null;if(bTool==='arrow'){bPlacing={t:'arrow',id:'p',tx:fx,ty:fy,x1:fx,y1:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}
         else if(bTool==='circle'){bPlacing={t:'circ',id:'p',x1:fx,y1:fy,x2:fx,y2:fy,c:bCol};bDrag={t:'pl',sx:x,sy:y};}
         else if(bTool==='cal'){bPlacing={t:'cal',id:'p',x1:fx,x2:fx,barY:fy,c:bCol,scl:caseObj.scale||null};bDrag={t:'pl',sx:x,sy:y,ox2:fx};}}
@@ -2331,6 +2338,16 @@
       if((e.key==='Delete'||e.key==='Backspace')&&bSel){e.preventDefault();bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;bSel=null;bDraw();}
       if((e.key==='m'||e.key==='M')&&bSel){const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');if(a){bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));a.march=!a.march;bDraw();}}
     });
+    // Document-level fallback for delete when canvas may not have focus
+    const bDocKey=e=>{
+      if(document.activeElement.tagName==='TEXTAREA'||document.activeElement.tagName==='INPUT')return;
+      if(!bSel)return;
+      if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;bSel=null;bDraw();}
+    };
+    document.addEventListener('keydown',bDocKey);
+    // Clean up when builder is destroyed (container removed)
+    const bObserver=new MutationObserver(()=>{ if(!document.contains(bc)){ document.removeEventListener('keydown',bDocKey); bObserver.disconnect(); } });
+    bObserver.observe(document.body,{childList:true,subtree:true});
  
     function bSaveCur(){if(bInFinal||bCurI>=bSteps.length)return;bSteps[bCurI].ann=JSON.parse(JSON.stringify(bActiveAnn));bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();}
     function bLoadStep(i){bCurI=i;bActiveAnn=JSON.parse(JSON.stringify(bSteps[i].ann||[]));container.querySelector('#annBDesc').value=bSteps[i].desc||'';bSel=null;bDraw();bRenderList();}
@@ -2358,6 +2375,15 @@
     container.querySelector('#annBSave').addEventListener('click',()=>{bSaveCur();toast('Step saved');});
     container.querySelector('#annBNew').addEventListener('click',()=>{bSaveCur();bSteps.push({ann:[],desc:''});bCurI=bSteps.length-1;bActiveAnn=[];container.querySelector('#annBDesc').value='';bSel=null;bDraw();bRenderList();bAutoFill();});
     container.querySelector('#annBDesc').addEventListener('input',()=>{if(!bInFinal&&bCurI<bSteps.length)bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();});
+ 
+    // Final view checkbox
+    const annShowFinalChk=container.querySelector('#annShowFinal');
+    const annFinalControls=container.querySelector('#annFinalControls');
+    // Restore state from caseObj
+    if(caseObj.showFinalView){annShowFinalChk.checked=true;annFinalControls.style.display='block';}
+    annShowFinalChk.addEventListener('change',()=>{
+      annFinalControls.style.display=annShowFinalChk.checked?'block':'none';
+    });
     container.querySelector('#annFinalTxt').addEventListener('input',()=>{caseObj._annFinalSaved=true;});
  
     function bEnterFinal(){
@@ -2388,7 +2414,7 @@
  
     container._annGetData=()=>{
       bSaveCur();if(bInFinal)bFinalAnn=JSON.parse(JSON.stringify(bActiveAnn));
-      return{annotationSteps:bSteps,finalAnn:bFinalAnn,finalText:container.querySelector('#annFinalTxt').value};
+      const ftxtEl=container.querySelector('#annFinalTxt'); return{annotationSteps:bSteps,finalAnn:bFinalAnn,finalText:ftxtEl?ftxtEl.value:'',showFinalView:container.querySelector('#annShowFinal').checked};
     };
     bc._bResize=bResize;bc._bLoadImg=bLoadCaseImg;
     bRenderList();bBuildTb();bDraw();
