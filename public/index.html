@@ -944,7 +944,7 @@
     function renderInterp(){
       const block = el.querySelector('#interpBlock');
       if(!available || !c._revealed){ block.innerHTML=''; renderDiff(); return; }
-      if(c.annotationSteps && c.annotationSteps.length && c.annotationSteps.some(s=>s.ann&&s.ann.length)){
+      if(!c._annDone && c.annotationSteps && c.annotationSteps.length && c.annotationSteps.some(s=>s.ann&&s.ann.length)){
         block.innerHTML='<div style="padding:8px 0;"><div style="font-size:11px;color:var(--teal);">Annotation walkthrough launched →</div></div>';
         startAnnViewer(c); renderDiff(); return;
       }
@@ -2019,7 +2019,7 @@
   function annMH(c,cx,cy,col){c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.fillStyle='rgba(0,0,0,0.55)';c.fill();c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle=col;c.font='bold 9px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('\u2295',cx,cy);c.textAlign='left';c.textBaseline='alphabetic';}
  
   // Viewer
-  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false,annVShowFinal=false;
+  let annVImg=null,annVSteps=[],annVFinalAnn=[],annVFinalText='',annVStep=0,annVFin=false,annVShowFinal=false,annVCaseRef=null;
   let annVC=null,annVCtx=null;
   function annGetCtx(){if(!annVC){annVC=document.getElementById('annVC');if(annVC)annVCtx=annVC.getContext('2d');}return annVCtx;}
  
@@ -2028,6 +2028,7 @@
     annVFinalAnn=caseObj.finalAnn||[];
     annVFinalText=caseObj.finalText||caseObj.interp&&caseObj.interp.text||'';
     annVShowFinal=caseObj.showFinalView||false;
+    annVCaseRef=caseObj;
     annVStep=0;annVFin=false;
     const imgs=getImages(caseObj);
     if(imgs.length){const im=new Image();im.onload=()=>{annVImg=im;annVSize();annVRender();};im.src=imgs[0];}
@@ -2052,7 +2053,7 @@
       desc.style.display='none';fin.style.display='block';
       fin.textContent=annVFinalText||annVSteps.map(s=>s.desc).filter(Boolean).join('\n\n')||'';
       prog.textContent='Final';nxt.textContent='Close';
-      nxt.onclick=()=>{document.getElementById('annOverlay').style.display='none';annVImg=null;};
+      nxt.onclick=()=>{document.getElementById('annOverlay').style.display='none';annVImg=null;if(annVCaseRef){annVCaseRef._annDone=true;renderToday();}  };
       prv.disabled=false;prv.onclick=()=>{annVFin=false;annVStep=annVSteps.length-1;annVRender();};
     } else {
       const s=annVSteps[annVStep];
@@ -2061,7 +2062,7 @@
       desc.textContent=s.desc||'';
       prog.textContent='Step '+(annVStep+1)+' of '+annVSteps.length;
       nxt.textContent=annVStep<annVSteps.length-1?'Next \u2192':'Show interpretation';
-      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else if(annVShowFinal){annVFin=true;annVRender();}else{document.getElementById('annOverlay').style.display='none';annVImg=null;}};
+      nxt.onclick=()=>{if(annVStep<annVSteps.length-1){annVStep++;annVRender();}else if(annVShowFinal){annVFin=true;annVRender();}else{document.getElementById('annOverlay').style.display='none';annVImg=null;if(annVCaseRef){annVCaseRef._annDone=true;renderToday();}}};
       prv.disabled=annVStep===0;prv.onclick=()=>{if(annVStep>0){annVStep--;annVRender();}};
     }
   }
