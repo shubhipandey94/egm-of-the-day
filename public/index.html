@@ -886,7 +886,7 @@
           else if(calDrag.p==='r'){a.x2=calDrag.ox2+dfx;a.barY=cl(calDrag.oby+dfy);}
           else{a.barY=cl(calDrag.oby+dfy);a.x1=calDrag.ox1+dfx;a.x2=calDrag.ox2+dfx;}
           const pxW=Math.abs((a.x2-a.x1)*R.w);
-          const msVal=Math.round(pxW/c.scale);
+          const msVal=Math.round(pxW/(c.scale*R.w));
           a.lbl=msVal+'ms';// update label live
           if(statusEl)statusEl.textContent=msVal+'ms';
         }}
@@ -898,7 +898,7 @@
           if(Math.abs((calPlacing.x2-calPlacing.x1)*R.w)>5){
             calUndo2.push(JSON.parse(JSON.stringify(calAnns)));
             const a={...calPlacing,id:calIdn++};
-            a.lbl=Math.round(Math.abs((a.x2-a.x1)*R.w)/c.scale)+'ms';
+            a.lbl=Math.round(Math.abs(a.x2-a.x1)/(c.scale))+'ms';
             calAnns.push(a);calSel=a.id;
           }
           calPlacing=null;
@@ -2088,7 +2088,7 @@
     c.beginPath();c.moveTo(x1,top);c.lineTo(x1,bot);c.stroke();
     if(Math.abs(x2-x1)>2){c.beginPath();c.moveTo(x2,top);c.lineTo(x2,bot);c.stroke();}
     c.beginPath();c.moveTo(x1,barY);c.lineTo(x2,barY);c.stroke();
-    const pxW2=Math.abs(x2-x1); const lbl=a.lbl||(a.scl?Math.round(pxW2/a.scl)+'ms':Math.round(pxW2)+'px');
+    const pxW2=Math.abs(x2-x1); const lbl=a.lbl||(a.scl&&R.w?Math.round(pxW2/(a.scl*R.w))+'ms':Math.round(pxW2)+'px');
     c.font='bold 10px monospace';c.fillStyle=col;c.textAlign='center';c.fillText(lbl,(x1+x2)/2,Math.max(R.y+12,barY-7));c.textAlign='left';
     if(isSel){[x1,x2].forEach(ax=>{c.beginPath();c.arc(ax,barY,4,0,Math.PI*2);c.fillStyle=col;c.fill();});}
     if(a.march&&Math.abs(x2-x1)>2){
@@ -2212,8 +2212,9 @@
       else{img=null;draw();}
     };
     canvasEl._getScale=(ms)=>{
-      if(!cal||Math.abs((cal.x2||cal.x1)-cal.x1)*IR.w<4)return null;
-      return Math.abs(cal.x2-cal.x1)*IR.w/ms;
+      if(!cal||Math.abs((cal.x2||cal.x1)-cal.x1)<0.001)return null;
+      // Store as fraction of image width per ms — device independent
+      return Math.abs(cal.x2-cal.x1)/ms;
     };
     setTimeout(()=>{
       resize();
@@ -2359,9 +2360,10 @@
  
     // Scale bar buttons
     container.querySelector('#annBSetSc').onclick=()=>{
-      if(!bScaleCal||Math.abs((bScaleCal.x2||0)-bScaleCal.x1)*bIR.w<2){toast('Place scale caliper first');return;}
+      if(!bScaleCal||Math.abs((bScaleCal.x2||0)-bScaleCal.x1)<0.001){toast('Place scale caliper first');return;}
       const ms=parseFloat(container.querySelector('#annBMsIn').value);if(!ms||ms<=0)return;
-      caseObj.scale=Math.abs(bScaleCal.x2-bScaleCal.x1)*bIR.w/ms;
+      // Store as fraction of image width per ms — device independent
+      caseObj.scale=Math.abs(bScaleCal.x2-bScaleCal.x1)/ms;
       bScaleMode=false;bScaleCal=null;container.querySelector('#annBScaleBar').style.display='none';
       toast('Scale calibrated: '+Math.round(ms)+'ms');bBuildTb();bDraw();
     };
