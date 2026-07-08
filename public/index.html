@@ -886,7 +886,9 @@
           else if(calDrag.p==='r'){a.x2=calDrag.ox2+dfx;a.barY=cl(calDrag.oby+dfy);}
           else{a.barY=cl(calDrag.oby+dfy);a.x1=calDrag.ox1+dfx;a.x2=calDrag.ox2+dfx;}
           const pxW=Math.abs((a.x2-a.x1)*R.w);
-          if(statusEl)statusEl.textContent=Math.round(pxW/c.scale)+'ms';
+          const msVal=Math.round(pxW/c.scale);
+          a.lbl=msVal+'ms';// update label live
+          if(statusEl)statusEl.textContent=msVal+'ms';
         }}
         calDraw();
       });
@@ -1393,18 +1395,15 @@
         btn.addEventListener('click', ()=>{
           const c = cases.find(x=>x.id===btn.dataset.id);
           if(!c) return;
-          // Show date picker confirmation
-          const today = todayStr();
-          const existing = c.liveDate||today;
-          const chosen = prompt('Go live on which date? (YYYY-MM-DD) — leave as today to go live immediately.', existing);
-          if(!chosen) return;
-          if(chosen === today){
-            c.status = 'live'; delete c.liveDate;
-            saveCases().then(ok=>{ if(ok){ toast('Case is now live'); promptBackup(); currentCaseId=c.id; switchTab('today'); }});
-          } else {
-            c.status = 'scheduled'; c.liveDate = chosen;
-            saveCases().then(ok=>{ if(ok){ toast('Scheduled for '+fmtDate(chosen)); promptBackup(); renderDraftsSection(); }});
-          }
+          showGoLiveModal(c, (chosen, isToday)=>{
+            if(isToday){
+              c.status='live'; delete c.liveDate;
+              saveCases().then(ok=>{ if(ok){ toast('Case is now live'); promptBackup(); currentCaseId=c.id; switchTab('today'); }});
+            } else {
+              c.status='scheduled'; c.liveDate=chosen;
+              saveCases().then(ok=>{ if(ok){ toast('Scheduled for '+fmtDate(chosen)); promptBackup(); renderDraftsSection(); }});
+            }
+          });
         });
       });
       existing.querySelectorAll('.draft-preview').forEach(btn=>{
@@ -1585,21 +1584,18 @@
       ds.querySelector('#dGoLive').addEventListener('click', async ()=>{
         const edits = collectDraftEdits('draft');// collect first without changing status
         if(!edits) return;
-        const today = todayStr();
-        const existing2 = c.liveDate||today;
-        const chosen = prompt('Go live on which date? (YYYY-MM-DD) — leave as today to go live immediately.', existing2);
-        if(!chosen) return;
         Object.assign(c, edits);
-        if(chosen === today){
-          c.status = 'live'; delete c.liveDate;
-        } else {
-          c.status = 'scheduled'; c.liveDate = chosen;
-        }
-        const ok3=await saveCases();
-        if(ok3){
-          if(c.status==='scheduled'){toast('Scheduled for '+fmtDate(c.liveDate));promptBackup();renderDraftsSection();el.dataset.subMode='new';renderPost();}
-          else{toast('Case is now live');promptBackup();currentCaseId=c.id;switchTab('today');}
-        }
+        showGoLiveModal(c, async (chosen, isToday)=>{
+          if(isToday){ c.status='live'; delete c.liveDate; }
+          else { c.status='scheduled'; c.liveDate=chosen; }
+          const ok3=await saveCases();
+          if(ok3){
+            if(c.status==='scheduled'){toast('Scheduled for '+fmtDate(c.liveDate));promptBackup();renderDraftsSection();el.dataset.subMode='new';renderPost();}
+            else{toast('Case is now live');promptBackup();currentCaseId=c.id;switchTab('today');}
+          }
+        });
+        return;// rest handled in modal callback
+ 
       });
  
       ds.querySelector('#backToDrafts').addEventListener('click', ()=>{
@@ -1826,6 +1822,32 @@
   }
  
   function getImages(c){ return c.images&&c.images.length?c.images:(c.image?[c.image]:[]); }
+ 
+  function showGoLiveModal(caseObj, onConfirm){
+    const today = todayStr();
+    const defaultDate = caseObj.liveDate||today;
+    // Create modal
+    const overlay = document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML=`
+      <div style="background:var(--ink-800,#171f2b);border:1px solid var(--line,#2a3544);border-radius:12px;padding:24px;width:300px;max-width:90vw;">
+        <h3 style="font-size:14px;color:var(--paper,#e8e6df);margin:0 0 8px;">Go live date</h3>
+        <p style="font-size:11px;color:var(--paper-dim,#9aa3b0);margin:0 0 16px;line-height:1.5;">Choose today to publish immediately, or pick a future date to schedule.</p>
+        <input type="date" id="goLiveDateIn" value="${defaultDate}" style="width:100%;background:var(--ink-900,#0a0e14);border:1px solid var(--line,#2a3544);color:var(--paper,#e8e6df);padding:8px 10px;border-radius:8px;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;">
+          <button id="goLiveConfirm" style="flex:1;background:var(--amber,#e8a23d);color:#0a0e14;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Confirm</button>
+          <button id="goLiveCancel" style="flex:1;background:transparent;color:var(--paper-dim,#9aa3b0);border:1px solid var(--line,#2a3544);padding:10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#goLiveCancel').onclick=()=>document.body.removeChild(overlay);
+    overlay.addEventListener('click',e=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+    overlay.querySelector('#goLiveConfirm').onclick=()=>{
+      const chosen=overlay.querySelector('#goLiveDateIn').value;
+      document.body.removeChild(overlay);
+      if(chosen) onConfirm(chosen, chosen===today);
+    };
+  }
   function getInterpImages(c){ const i=c.interp||{}; return i.images&&i.images.length?i.images:(i.image?[i.image]:[]); }
  
   function mountImageZone(container, imagesArr, onChange){
@@ -2554,5 +2576,4 @@
 </script>
 </body>
 </html>
- 
  
