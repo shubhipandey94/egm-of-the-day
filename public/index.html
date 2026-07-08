@@ -594,7 +594,13 @@
   }
  
   // ---------- render: today ----------
-  function isLive(c){ return !c.status || c.status === 'live'; }
+  function isLive(c){
+    if(c.status === 'draft') return false;
+    if(c.status === 'scheduled'){
+      return c.liveDate && c.liveDate <= todayStr();
+    }
+    return !c.status || c.status === 'live';
+  }
  
   function pickTodaysCase(){
     if(cases.length === 0) return null;
@@ -1343,50 +1349,62 @@
     renderDraftsSection();
  
     function renderDraftsSection(){
-      const drafts = cases.filter(c => c.status === 'draft');
+      const drafts = cases.filter(c => c.status === 'draft' || c.status === 'scheduled');
       let existing = el.querySelector('#draftsSection');
       if(!existing){
         existing = document.createElement('div');
         existing.id = 'draftsSection';
         el.appendChild(existing);
       }
-      if(drafts.length === 0){
-        existing.innerHTML = '';
-        return;
-      }
+      if(drafts.length === 0){ existing.innerHTML = ''; return; }
       existing.innerHTML = `
         <div style="border-top:1px solid var(--line); margin-top:24px; padding-top:18px;">
           <h3 style="font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--paper-dim); margin:0 0 12px;">Drafts (${drafts.length})</h3>
           <div class="archive-grid" id="draftsList">
-            ${drafts.map(c=>`
+            ${drafts.map(c=>{
+              const isScheduled = c.status==='scheduled';
+              const badge = isScheduled
+                ? `<span style="font-size:10px;color:var(--amber);font-weight:700;">Scheduled: ${fmtDate(c.liveDate)}</span>`
+                : `<span style="font-size:10px;color:var(--paper-dim);">Draft</span>`;
+              const goLiveLabel = isScheduled ? 'Reschedule / go live' : 'Go live';
+              return `
               <div class="archive-item" style="flex-direction:column; align-items:flex-start; gap:8px;" data-draft-id="${c.id}">
                 <div style="display:flex; gap:12px; align-items:center; width:100%;">
                   <div class="thumb">${getImages(c).length?`<img src="${getImages(c)[0]}">`:''}</div>
                   <div class="meta-col">
                     <p class="t">${escapeHtml(c.title)}</p>
-                    <div class="d">Scheduled: ${fmtDate(c.date)}</div>
+                    <div class="d" style="display:flex;align-items:center;gap:8px;">
+                      <span>Case date: ${fmtDate(c.date)}</span>${badge}
+                    </div>
                   </div>
                 </div>
                 <div style="display:flex; gap:8px; width:100%; flex-wrap:wrap;">
-                  <button class="publish-btn draft-go-live" data-id="${c.id}" style="flex:1; padding:10px; font-size:11px;">Go live</button>
+                  <button class="publish-btn draft-go-live" data-id="${c.id}" style="flex:1; padding:10px; font-size:11px;">${goLiveLabel}</button>
                   <button class="add-opt draft-preview" data-id="${c.id}" style="flex:1;">Preview</button>
                   <button class="add-opt draft-edit" data-id="${c.id}" style="flex:1;">Edit</button>
                   <button class="add-opt draft-delete" data-id="${c.id}" style="flex:1; color:var(--red); border-color:var(--red);">Delete</button>
                 </div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
         </div>
       `;
       existing.querySelectorAll('.draft-go-live').forEach(btn=>{
-        btn.addEventListener('click', async ()=>{
+        btn.addEventListener('click', ()=>{
           const c = cases.find(x=>x.id===btn.dataset.id);
           if(!c) return;
-          c.status = 'live';
-          await saveCases();
-          toast('Case is now live');
-          currentCaseId = c.id;
-          switchTab('today');
+          // Show date picker confirmation
+          const today = todayStr();
+          const existing = c.liveDate||today;
+          const chosen = prompt('Go live on which date? (YYYY-MM-DD) — leave as today to go live immediately.', existing);
+          if(!chosen) return;
+          if(chosen === today){
+            c.status = 'live'; delete c.liveDate;
+            saveCases().then(ok=>{ if(ok){ toast('Case is now live'); promptBackup(); currentCaseId=c.id; switchTab('today'); }});
+          } else {
+            c.status = 'scheduled'; c.liveDate = chosen;
+            saveCases().then(ok=>{ if(ok){ toast('Scheduled for '+fmtDate(chosen)); promptBackup(); renderDraftsSection(); }});
+          }
         });
       });
       existing.querySelectorAll('.draft-preview').forEach(btn=>{
@@ -1457,6 +1475,9 @@
           <div class="form-block"><label>Answer choices (mark correct one)</label>
             <div id="dOptsWrap"></div>
             <button class="add-opt" id="dAddOpt">+ Add choice</button>
+          </div>
+          <div class="form-block"><label>Go live date (optional — leave blank to go live immediately)</label>
+            <input type="date" id="dLiveDate" value="${c.liveDate||''}">
           </div>
           <div class="form-block"><label>Interpretation release date</label>
             <input type="date" id="dInterpDate" value="${c.interpDate||c.date}">
@@ -1539,6 +1560,7 @@
           title,
           images: dImageData,
           scale: dScaleVal||null,
+          liveDate: ds.querySelector('#dLiveDate').value||null,
           caption: ds.querySelector('#dCaption').value.trim(),
           options,
           interpDate: ds.querySelector('#dInterpDate').value,
@@ -1561,11 +1583,23 @@
       });
  
       ds.querySelector('#dGoLive').addEventListener('click', async ()=>{
-        const edits = collectDraftEdits('live');
+        const edits = collectDraftEdits('draft');// collect first without changing status
         if(!edits) return;
+        const today = todayStr();
+        const existing2 = c.liveDate||today;
+        const chosen = prompt('Go live on which date? (YYYY-MM-DD) — leave as today to go live immediately.', existing2);
+        if(!chosen) return;
         Object.assign(c, edits);
+        if(chosen === today){
+          c.status = 'live'; delete c.liveDate;
+        } else {
+          c.status = 'scheduled'; c.liveDate = chosen;
+        }
         const ok3=await saveCases();
-        if(ok3){toast('Case is now live');promptBackup();currentCaseId=c.id;switchTab('today');}
+        if(ok3){
+          if(c.status==='scheduled'){toast('Scheduled for '+fmtDate(c.liveDate));promptBackup();renderDraftsSection();el.dataset.subMode='new';renderPost();}
+          else{toast('Case is now live');promptBackup();currentCaseId=c.id;switchTab('today');}
+        }
       });
  
       ds.querySelector('#backToDrafts').addEventListener('click', ()=>{
@@ -2520,4 +2554,5 @@
 </script>
 </body>
 </html>
+ 
  
