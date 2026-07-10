@@ -941,7 +941,18 @@
         calDraw();
       });
       cv2.addEventListener('mousemove',e=>{
-        if(!calDrag)return;const{x,y}=calGP(e);const R=calIR;
+        if(!calDrag){
+          // Update cursor based on what's under pointer
+          const{x,y}=calGP(e);
+          const hit=calHit(x,y);
+          if(hit){
+            cv2.style.cursor=hit.p==='bar'?'move':(hit.p==='l'||hit.p==='r'?'ew-resize':'pointer');
+          } else {
+            cv2.style.cursor='crosshair';
+          }
+          return;
+        }
+        const{x,y}=calGP(e);const R=calIR;
         const dfx=(x-calDrag.sx)/R.w,dfy=(y-calDrag.sy)/R.h,cl=v=>Math.max(0,Math.min(1,v));
         if(calDrag.t==='pl'&&calPlacing){calPlacing.x2=calDrag.ox2+dfx;calPlacing.barY=cl((calDrag.sy/R.h)+dfy);}
         else if(calDrag.id){const a=calAnns.find(a=>a.id===calDrag.id);if(a){
@@ -2151,7 +2162,7 @@
   function annCal(c,a,col,isSel,R){
     const x1=annPx(a.x1,R,'x'),x2=annPx(a.x2!==undefined?a.x2:a.x1,R,'x'),barY=annPx(a.barY!==undefined?a.barY:0.5,R,'y');
     const top=R.y,bot=R.y+R.h;
-    c.strokeStyle=col;c.lineWidth=isSel?2:1.5;
+    c.strokeStyle=col;c.lineWidth=isSel?1.5:1;
     c.beginPath();c.moveTo(x1,top);c.lineTo(x1,bot);c.stroke();
     if(Math.abs(x2-x1)>2){c.beginPath();c.moveTo(x2,top);c.lineTo(x2,bot);c.stroke();}
     c.beginPath();c.moveTo(x1,barY);c.lineTo(x2,barY);c.stroke();
@@ -2159,14 +2170,14 @@
     c.font='bold 10px monospace';c.fillStyle=col;c.textAlign='center';c.fillText(lbl,(x1+x2)/2,Math.max(R.y+12,barY-7));c.textAlign='left';
     if(isSel){[x1,x2].forEach(ax=>{c.beginPath();c.arc(ax,barY,4,0,Math.PI*2);c.fillStyle=col;c.fill();});}
     if(a.march&&Math.abs(x2-x1)>2){
-      c.globalAlpha=0.65;c.setLineDash([6,4]);
+      c.globalAlpha=0.5;c.setLineDash([4,6]);
       for(let i=1;i<80;i++){const ox=(x2-x1)*i;[[x1+ox,x2+ox],[x1-ox,x2-ox]].forEach(([a1,a2])=>{
         if(a1>c.canvas.width+80&&a2>c.canvas.width+80)return;if(a1<-80&&a2<-80)return;
         annML(c,a1,top,a1,bot,col);annML(c,a2,top,a2,bot,col);annML(c,a1,barY,a2,barY,col);
       });}c.setLineDash([]);
     }
   }
-  function annML(c,x1,y1,x2,y2,col){c.lineWidth=2;c.strokeStyle='rgba(0,0,0,0.5)';c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.lineWidth=1;c.strokeStyle=col;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
+  function annML(c,x1,y1,x2,y2,col){c.lineWidth=1;c.strokeStyle='rgba(0,0,0,0.2)';c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.lineWidth=0.75;c.strokeStyle=col;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
   function annMH(c,cx,cy,col){c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.fillStyle='rgba(0,0,0,0.55)';c.fill();c.beginPath();c.arc(cx,cy,7,0,Math.PI*2);c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle=col;c.font='bold 9px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('\u2295',cx,cy);c.textAlign='left';c.textBaseline='alphabetic';}
  
   // Viewer
