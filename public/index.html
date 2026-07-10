@@ -2215,12 +2215,13 @@
   }
   function annVSize(){
     if(!annGetCtx())return;
-    const wrap=document.getElementById('annCanvasWrap');
-    const r=wrap.getBoundingClientRect();
-    const w=Math.floor(r.width)||window.innerWidth;
-    const h=Math.floor(r.height)||Math.floor(window.innerHeight*0.65);
-    annVC.width=w;annVC.height=h;
-    annVC.style.width=w+'px';annVC.style.height=h+'px';
+    // Use window dimensions directly since overlay is position:fixed;inset:0
+    const w=Math.floor(window.innerWidth);
+    const bottom=document.getElementById('annBottom');
+    const bottomH=bottom?Math.floor(bottom.getBoundingClientRect().height)||150:150;
+    const h=Math.floor(window.innerHeight)-bottomH;
+    annVC.width=w;annVC.height=Math.max(h,100);
+    annVC.style.width=w+'px';annVC.style.height=Math.max(h,100)+'px';
   }
   function annVRender(){
     if(!annGetCtx())return;
@@ -2712,4 +2713,5 @@
 </script>
 </body>
 </html>
+ 
  
