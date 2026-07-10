@@ -381,15 +381,30 @@
     return streak;
   }
   function getStreakAtRiskCase(){
-    // find the most recent unanswered case that is within the 72hr window
-    // but has been posted for more than 24hrs (so we don't nag immediately)
+    // Find the OLDEST unanswered case within the 72hr window
+    // (oldest = soonest deadline = most urgent threat to streak)
     const answeredIds = new Set(getAnsweredIds());
-    const liveCases = cases.filter(isLive).sort((a,b)=> casePostedAt(b)-casePostedAt(a));
+    const liveCases = cases.filter(isLive).sort((a,b)=> casePostedAt(a)-casePostedAt(b)); // oldest first
+    let atRisk = null;
     for(const c of liveCases){
       const age = Date.now() - casePostedAt(c);
-      if(!answeredIds.has(c.id) && isWithinWindow(c) && age > 24 * 60 * 60 * 1000) return c;
+      if(!answeredIds.has(c.id) && isWithinWindow(c) && age > 24 * 60 * 60 * 1000){
+        atRisk = c; // take the first (oldest) one found
+        break;
+      }
     }
-    return null;
+    return atRisk;
+  }
+  function fmtTimeLeft(c){
+    const msLeft = casePostedAt(c) + STREAK_WINDOW_MS - Date.now();
+    if(msLeft <= 0) return '0 hours';
+    const hoursLeft = Math.floor(msLeft / (60*60*1000));
+    if(hoursLeft < 1) return 'less than 1 hour';
+    if(hoursLeft < 24) return hoursLeft + ' hour' + (hoursLeft===1?'':'s');
+    const daysLeft = Math.floor(hoursLeft/24);
+    const remHrs = hoursLeft % 24;
+    if(remHrs === 0) return daysLeft + ' day' + (daysLeft===1?'':'s');
+    return daysLeft + 'd ' + remHrs + 'h';
   }
   function fmtDeadline(c){
     const deadline = new Date(casePostedAt(c) + STREAK_WINDOW_MS);
@@ -525,6 +540,14 @@
           const toSave = Object.fromEntries(
             Object.entries(cas).filter(([k])=>!k.startsWith('_'))
           );
+          // Strip redundant imgSrc from annotationSteps (if matches case primary image)
+          if(toSave.annotationSteps && toSave.images && toSave.images[0]){
+            const primarySrc = toSave.images[0];
+            toSave.annotationSteps = toSave.annotationSteps.map(s=>{
+              if(s.imgSrc && s.imgSrc === primarySrc){ const {imgSrc,...rest}=s; return rest; }
+              return s;
+            });
+          }
           const r = await window.storage.set('egm:case:' + cas.id, JSON.stringify(toSave), SHARED);
           if(!r) failed++;
         }catch(e){ failed++; }
@@ -710,11 +733,11 @@
     const myDiffVote = getMyDifficultyVote(c.id);
     const diffAvg = difficultyAverage(c.diffRatings);
     const atRiskCase = !isPreviewing ? getStreakAtRiskCase() : null;
-    const showStreakBanner = atRiskCase && !sessionStorage.getItem('egm:streak-banner-dismissed-' + atRiskCase.id);
+    const showStreakBanner = atRiskCase && streak > 0 && !sessionStorage.getItem('egm:streak-banner-dismissed-' + atRiskCase.id);
  
     const streakBanner = showStreakBanner ? `
       <div id="streakBanner" style="background:rgba(232,162,61,0.12); border:1px solid var(--amber-dim); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
-        <span style="font-size:12px; color:var(--amber); line-height:1.6;">🔥 There's an unanswered case from ${fmtDate(atRiskCase.date)}. Go to Archive to answer it by ${fmtDeadline(atRiskCase)} to keep your streak alive.</span>
+        <span style="font-size:12px; color:var(--amber); line-height:1.6;">🔥 There's an unanswered case from ${fmtDate(atRiskCase.date)}. You have ${fmtTimeLeft(atRiskCase)} to answer it and keep your streak alive.</span>
         <button id="dismissStreakBanner" style="background:transparent; border:none; color:var(--paper-dim); font-size:16px; cursor:pointer; flex-shrink:0; padding:0 4px;">✕</button>
       </div>
     ` : '';
@@ -1729,12 +1752,16 @@
         const mount = el.querySelector('#annBuilderMount');
         if(annBuilderMounted && mount && mount._annGetData){
           const annData = mount._annGetData();
-          if(annData.annotationSteps && annData.annotationSteps.some(s=>s.ann&&s.ann.length)){
+          if(annData.annotationSteps && annData.annotationSteps.length &&
+             annData.annotationSteps.some(s=>(s.ann&&s.ann.length)||s.desc)){
             c.annotationSteps = annData.annotationSteps;
             c.finalAnn = annData.finalAnn;
             c.finalText = annData.finalText;
             c.showFinalView = annData.showFinalView||false;
-          } else { delete c.annotationSteps; delete c.finalAnn; delete c.finalText; }
+          } else if(annData.annotationSteps && !annData.annotationSteps.some(s=>(s.ann&&s.ann.length)||s.desc)){
+            // Only clear if truly empty (no drawings AND no descriptions)
+            delete c.annotationSteps; delete c.finalAnn; delete c.finalText;
+          }
         }
         const okI=await saveCases();
         if(okI){ toast('Interpretation saved'); promptBackup(); el.dataset.editId=''; renderPost(); }
@@ -1918,7 +1945,7 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0,0,iw,ih);
             ctx.drawImage(img,0,0,iw,ih);
-            const jpeg = canvas.toDataURL('image/jpeg', 0.65);
+            const jpeg = canvas.toDataURL('image/jpeg', 0.82);
             URL.revokeObjectURL(blobUrl);
             resolve(jpeg.length > 5000 ? jpeg : dataUrl);
           }catch(e){
@@ -2244,11 +2271,14 @@
           '<button class="abtb" id="annBSetSc" style="height:18px;padding:0 6px;">Set</button>'+
           '<button class="abtb" id="annBCanSc" style="height:18px;padding:0 6px;">Cancel</button></div>'+
         '<div id="annBCanvas"><canvas id="annBC" tabindex="0" style="position:absolute;top:0;left:0;cursor:crosshair;outline:none;touch-action:none;"></canvas></div>'+
-        '<div id="annLblBar" style="display:none;background:#171f2b;border-bottom:1px solid #2a3544;padding:0 8px;height:28px;align-items:center;gap:6px;font-size:9px;color:#9aa3b0;">'+
-        '<span>Caliper label:</span>'+
+        '<div style="background:#171f2b;border-bottom:1px solid #2a3544;padding:0 8px;height:28px;align-items:center;gap:6px;font-size:9px;display:flex;">'+
+        '<button id="annBDelSel" class="abtb red" style="display:none;height:20px;padding:0 8px;">Delete selected</button>'+
+        '<div id="annLblBar" style="display:none;align-items:center;gap:6px;flex:1;">'+
+        '<span>Label:</span>'+
         '<input id="annLblIn" type="text" placeholder="e.g. 320ms" style="flex:1;background:#0a0e14;border:1px solid #2a3544;color:#e8e6df;padding:2px 6px;border-radius:4px;font-size:9px;outline:none;height:20px;">'+
         '<button class="abtb" id="annLblSet" style="height:20px;padding:0 6px;">Set</button>'+
         '<button class="abtb" id="annLblClr" style="height:20px;padding:0 6px;">Clear</button>'+
+        '</div>'+
         '</div>'+
         '<div id="annBSteps">'+
           '<div id="annBStepList"></div>'+
@@ -2373,16 +2403,29 @@
     function bUpdateLblBar(){
       const bar=container.querySelector('#annLblBar');
       if(!bar)return;
+      const delBtn=container.querySelector('#annBDelSel');
       if(bSel){
+        // Show delete button for any selected annotation
+        if(delBtn)delBtn.style.display='inline-flex';
+        // Show label bar only for calipers
         const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');
         if(a){
           bar.style.display='flex';
           container.querySelector('#annLblIn').value=a.lbl||'';
           return;
         }
+      } else {
+        if(delBtn)delBtn.style.display='none';
       }
       bar.style.display='none';
     }
+    container.querySelector('#annBDelSel').onclick=()=>{
+      if(!bSel)return;
+      bUndo.push(JSON.parse(JSON.stringify(bActiveAnn)));
+      bActiveAnn=bActiveAnn.filter(a=>a.id!==bSel);
+      if(bInFinal)bFinalAnn=bActiveAnn;else bSteps[bCurI].ann=bActiveAnn;
+      bSel=null;bUpdateLblBar();bDraw();
+    };
     container.querySelector('#annLblSet').onclick=()=>{
       if(!bSel)return;
       const a=bActiveAnn.find(a=>a.id===bSel&&a.t==='cal');
@@ -2401,16 +2444,34 @@
     };
  
     function bHit(px,py){
+      // Refresh bIR in case canvas was resized
+      bIR=annImgRect(bImg,bc.width,bc.height);
       const R=bIR;
       for(let i=bActiveAnn.length-1;i>=0;i--){
         const a=bActiveAnn[i];
+        // Move handle (center)
         if(a.t==='arrow'||a.t==='circ'){
           let cx,cy;if(a.t==='arrow'){cx=annPx((a.tx+a.x1)/2,R,'x');cy=annPx((a.ty+a.y1)/2,R,'y');}
           else{cx=annPx((a.x1+a.x2)/2,R,'x');cy=annPx((a.y1+a.y2)/2,R,'y');}
-          if(Math.hypot(px-cx,py-cy)<10)return{id:a.id,p:'mv'};
+          if(Math.hypot(px-cx,py-cy)<14)return{id:a.id,p:'mv'};
         }
-        if(a.t==='arrow'){if(Math.hypot(px-annPx(a.tx,R,'x'),py-annPx(a.ty,R,'y'))<ANN_AH)return{id:a.id,p:'tip'};if(Math.hypot(px-annPx(a.x1,R,'x'),py-annPx(a.y1,R,'y'))<ANN_AH)return{id:a.id,p:'tail'};}
-        if(a.t==='circ'){if(Math.hypot(px-annPx(a.x1,R,'x'),py-annPx(a.y1,R,'y'))<ANN_AH)return{id:a.id,p:'p1'};if(Math.hypot(px-annPx(a.x2,R,'x'),py-annPx(a.y2,R,'y'))<ANN_AH)return{id:a.id,p:'p2'};}
+        if(a.t==='arrow'){
+          const tx=annPx(a.tx,R,'x'),ty=annPx(a.ty,R,'y'),x1=annPx(a.x1,R,'x'),y1=annPx(a.y1,R,'y');
+          if(Math.hypot(px-tx,py-ty)<ANN_AH)return{id:a.id,p:'tip'};
+          if(Math.hypot(px-x1,py-y1)<ANN_AH)return{id:a.id,p:'tail'};
+          // Hit anywhere along arrow shaft
+          const len=Math.hypot(tx-x1,ty-y1);
+          if(len>2){const t=((px-x1)*(tx-x1)+(py-y1)*(ty-y1))/(len*len);const tc=Math.max(0,Math.min(1,t));const dx=px-(x1+tc*(tx-x1)),dy=py-(y1+tc*(ty-y1));if(Math.hypot(dx,dy)<10)return{id:a.id,p:'mv'};}
+        }
+        if(a.t==='circ'){
+          const x1=annPx(a.x1,R,'x'),y1=annPx(a.y1,R,'y'),x2=annPx(a.x2,R,'x'),y2=annPx(a.y2,R,'y');
+          if(Math.hypot(px-x1,py-y1)<ANN_AH)return{id:a.id,p:'p1'};
+          if(Math.hypot(px-x2,py-y2)<ANN_AH)return{id:a.id,p:'p2'};
+          // Hit ellipse perimeter
+          const cx=(x1+x2)/2,cy=(y1+y2)/2,rx=Math.abs(x2-x1)/2||2,ry=Math.abs(y2-y1)/2||2;
+          const norm=Math.hypot((px-cx)/rx,(py-cy)/ry);
+          if(norm>0.6&&norm<1.5)return{id:a.id,p:'mv'};
+        }
         if(a.t==='cal'){const cx1=annPx(a.x1,R,'x'),cx2=annPx(a.x2||a.x1,R,'x'),by=annPx(a.barY||0.5,R,'y');if(Math.abs(px-cx1)<ANN_AH)return{id:a.id,p:'l'};if(Math.abs(px-cx2)<ANN_AH)return{id:a.id,p:'r'};if(px>=Math.min(cx1,cx2)-4&&px<=Math.max(cx1,cx2)+4&&Math.abs(py-by)<ANN_BH)return{id:a.id,p:'bar'};}
       }return null;
     }
@@ -2526,7 +2587,13 @@
     }
     container.querySelector('#annBSave').addEventListener('click',()=>{bSaveCur();toast('Step saved');});
     container.querySelector('#annBNew').addEventListener('click',()=>{bSaveCur();bSteps.push({ann:[],desc:''});bCurI=bSteps.length-1;bActiveAnn=[];container.querySelector('#annBDesc').value='';bSel=null;bDraw();bRenderList();bAutoFill();});
-    container.querySelector('#annBDesc').addEventListener('input',()=>{if(!bInFinal&&bCurI<bSteps.length)bSteps[bCurI].desc=container.querySelector('#annBDesc').value;bAutoFill();bRenderList();});
+    let bDescTimer=null;
+    container.querySelector('#annBDesc').addEventListener('input',()=>{
+      if(!bInFinal&&bCurI<bSteps.length) bSteps[bCurI].desc=container.querySelector('#annBDesc').value;
+      // Debounce list re-render to avoid destroying button listeners mid-click
+      clearTimeout(bDescTimer);
+      bDescTimer=setTimeout(()=>{ bAutoFill(); bRenderList(); }, 400);
+    });
  
     // Final view checkbox
     const annShowFinalChk=container.querySelector('#annShowFinal');
@@ -2539,7 +2606,7 @@
     container.querySelector('#annFinalTxt').addEventListener('input',()=>{caseObj._annFinalSaved=true;});
  
     function bEnterFinal(){
-      bSaveCur();bInFinal=true;
+      bSaveCur();bInFinal=true;bScaleMode=false;bScaleCal=null;
       if(!bFinalAnn.length)bFinalAnn=bSteps.flatMap(s=>JSON.parse(JSON.stringify(s.ann||[])));
       bActiveAnn=bFinalAnn;
       const fvBtn=container.querySelector('#annBFinalView');
@@ -2566,10 +2633,18 @@
  
     container._annGetData=()=>{
       bSaveCur();if(bInFinal)bFinalAnn=JSON.parse(JSON.stringify(bActiveAnn));
-      const ftxtEl=container.querySelector('#annFinalTxt'); return{annotationSteps:bSteps,finalAnn:bFinalAnn,finalText:ftxtEl?ftxtEl.value:'',showFinalView:container.querySelector('#annShowFinal').checked};
+      const ftxtEl=container.querySelector('#annFinalTxt');
+      const caseImgSrc=getImages(caseObj)[0]||null;
+      // Strip imgSrc from steps if it matches the case primary image — avoids redundant storage
+      const steps=bSteps.map(s=>{
+        const out={ann:s.ann,desc:s.desc};
+        if(s.imgSrc&&s.imgSrc!==caseImgSrc) out.imgSrc=s.imgSrc;
+        return out;
+      });
+      return{annotationSteps:steps,finalAnn:bFinalAnn,finalText:ftxtEl?ftxtEl.value:'',showFinalView:container.querySelector('#annShowFinal').checked};
     };
     bc._bResize=bResize;bc._bLoadImg=bLoadCaseImg;
-    bRenderList();bBuildTb();bDraw();
+    bLoadStep(0);bBuildTb();// bLoadStep populates textarea + annotations for step 0
   }
  
 })();
