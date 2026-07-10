@@ -344,6 +344,10 @@
  
   function uid(){ return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
  
+  // Image compression settings — can be lowered if saves fail
+  let imgMaxDim = 1600;
+  let imgQuality = 0.92;
+ 
   // ---------- streak ----------
   const STREAK_WINDOW_MS = 72 * 60 * 60 * 1000; // 72 hours
  
@@ -461,7 +465,10 @@
       console.log('[storage] set response status:', res.status);
       if(!res.ok){
         const text = await res.text();
-        console.error('[storage] set error:', text);
+        console.error('[storage] set error:', res.status, text);
+        if(text && text.includes('TOOBIG')){
+          showCompressPrompt();
+        }
         return null;
       }
       const data = await res.json();
@@ -553,6 +560,8 @@
         }catch(e){ failed++; }
       }
       if(failed > 0){ toast('Save failed for ' + failed + ' case(s)'); return false; }
+      // Reset compression to high quality after successful save
+      imgMaxDim = 1600; imgQuality = 0.92;
       try{
         const allKeys = await window.storage.list('egm:case:', SHARED);
         if(allKeys && allKeys.keys){
@@ -565,6 +574,32 @@
       }catch(e){}
       return true;
     }catch(e){ toast('Save failed — try again'); return false; }
+  }
+ 
+  function showCompressPrompt(){
+    // Remove any existing compress prompt
+    const existing = document.getElementById('compressPrompt');
+    if(existing) document.body.removeChild(existing);
+    const t = document.createElement('div');
+    t.id = 'compressPrompt';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#171f2b;border:1px solid var(--red);color:#e8e6df;padding:12px 16px;border-radius:8px;font-size:11px;z-index:9999;display:flex;flex-direction:column;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.6);max-width:320px;width:90%;';
+    t.innerHTML = '<span style="color:var(--red);font-weight:700;">Save failed — image too large</span><span style="color:#9aa3b0;line-height:1.5;">Your image(s) exceed D1\'s 1MB row limit. Use more compression and re-upload.</span>';
+    const btn = document.createElement('button');
+    btn.textContent = 'Use more compression → re-upload images';
+    btn.style.cssText = 'background:rgba(217,104,95,0.15);border:1px solid var(--red);color:#e8e6df;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;text-align:left;';
+    btn.onclick = ()=>{
+      imgMaxDim = 800;
+      imgQuality = 0.70;
+      document.body.removeChild(t);
+      toast('Compression increased — please re-upload your images');
+    };
+    const skip = document.createElement('button');
+    skip.textContent = 'Dismiss';
+    skip.style.cssText = 'background:transparent;border:none;color:#9aa3b0;cursor:pointer;font-size:10px;font-family:inherit;text-align:left;padding:0;';
+    skip.onclick = ()=>document.body.removeChild(t);
+    t.appendChild(btn);
+    t.appendChild(skip);
+    document.body.appendChild(t);
   }
  
   function promptBackup(){
@@ -884,9 +919,14 @@
         for(let i=calAnns.length-1;i>=0;i--){
           const a=calAnns[i];
           const cx1=annPx(a.x1,R,'x'),cx2=annPx(a.x2||a.x1,R,'x'),by=annPx(a.barY||0.5,R,'y');
+          const xmin=Math.min(cx1,cx2),xmax=Math.max(cx1,cx2);
+          // Check bar first (move whole caliper) — wider hit area
+          if(x>=xmin+14&&x<=xmax-14&&Math.abs(y-by)<20)return{id:a.id,p:'bar'};
+          // Then arms (resize)
           if(Math.abs(x-cx1)<14)return{id:a.id,p:'l'};
           if(Math.abs(x-cx2)<14)return{id:a.id,p:'r'};
-          if(x>=Math.min(cx1,cx2)-4&&x<=Math.max(cx1,cx2)+4&&Math.abs(y-by)<16)return{id:a.id,p:'bar'};
+          // Bar edge fallback
+          if(x>=xmin-4&&x<=xmax+4&&Math.abs(y-by)<20)return{id:a.id,p:'bar'};
         }return null;
       }
       function calGP(e){const r=cv2.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
@@ -1927,7 +1967,7 @@
         const img = new Image();
         img.onload = ()=>{
           try{
-            const MAX_DIM = 800;
+            const MAX_DIM = imgMaxDim;
             let iw = img.naturalWidth, ih = img.naturalHeight;
             if(iw === 0 || ih === 0){
               URL.revokeObjectURL(blobUrl);
@@ -1945,7 +1985,7 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0,0,iw,ih);
             ctx.drawImage(img,0,0,iw,ih);
-            const jpeg = canvas.toDataURL('image/jpeg', 0.82);
+            const jpeg = canvas.toDataURL('image/jpeg', imgQuality);
             URL.revokeObjectURL(blobUrl);
             resolve(jpeg.length > 5000 ? jpeg : dataUrl);
           }catch(e){
