@@ -2126,7 +2126,8 @@
  
   function annImgRect(imgEl,w,h){
     if(!imgEl)return{x:0,y:0,w,h};
-    const r=imgEl.width/imgEl.height,cv=w/h;
+    const iw=imgEl.naturalWidth||imgEl.width||1,ih=imgEl.naturalHeight||imgEl.height||1;
+    const r=iw/ih,cv=w/h;
     if(r>cv){const dh=w/r;return{x:0,y:(h-dh)/2,w,h:dh};}
     else{const dw=h*r;return{x:(w-dw)/2,y:0,w:dw,h};}
   }
@@ -2195,8 +2196,11 @@
     annVImg=null;annVImgCache={};
     annVCaseImgSrc=getImages(caseObj)[0]||null;
     const ov=document.getElementById('annOverlay');ov.style.display='flex';
-    annVSize();
-    annVLoadStepImg(0,()=>annVRender());
+    // Wait for flex layout to complete before measuring canvas dimensions
+    requestAnimationFrame(()=>{
+      annVSize();
+      annVLoadStepImg(0,()=>annVRender());
+    });
   }
  
   function annVLoadStepImg(stepIdx, cb){
@@ -2211,8 +2215,12 @@
   }
   function annVSize(){
     if(!annGetCtx())return;
-    const r=document.getElementById('annCanvasWrap').getBoundingClientRect();
-    annVC.width=Math.floor(r.width);annVC.height=Math.floor(r.height);
+    const wrap=document.getElementById('annCanvasWrap');
+    const r=wrap.getBoundingClientRect();
+    const w=Math.floor(r.width)||window.innerWidth;
+    const h=Math.floor(r.height)||Math.floor(window.innerHeight*0.65);
+    annVC.width=w;annVC.height=h;
+    annVC.style.width=w+'px';annVC.style.height=h+'px';
   }
   function annVRender(){
     if(!annGetCtx())return;
