@@ -765,6 +765,11 @@
     }
  
     const streak = !isPreviewing ? computeStreak() : 0;
+    const dayOfWeek = new Date().getDay(); // 0=Sun, 6=Sat
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const todayHasCase = pickTodaysCase()?.date === todayStr();
+    const showWeekendBadge = isWeekend && !todayHasCase && !isPreviewing;
+    const isDayOff = !isPreviewing && localStorage.getItem('egm:dayoff') === todayStr();
     const myDiffVote = getMyDifficultyVote(c.id);
     const diffAvg = difficultyAverage(c.diffRatings);
     const atRiskCase = !isPreviewing ? getStreakAtRiskCase() : null;
@@ -780,6 +785,17 @@
     el.innerHTML = `
       ${previewBanner}
       ${streakBanner}
+      ${isDayOff ? '<div style="background:rgba(154,163,176,0.08);border:1px solid #2a3544;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">' +
+        '<span style="font-size:20px;">📅</span>' +
+        '<div><div style="font-size:12px;color:var(--paper);font-weight:600;margin-bottom:2px;">No new case today.</div>' +
+        '<div style="font-size:11px;color:var(--paper-dim);">Check back tomorrow for a new EGM. Showing the most recent case below.</div></div></div>' : ''}
+      ${showWeekendBadge ? `<div style="background:rgba(154,163,176,0.08);border:1px solid #2a3544;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">😴</span>
+        <div>
+          <div style="font-size:12px;color:var(--paper);font-weight:600;margin-bottom:2px;">Happy weekend! No new cases today.</div>
+          <div style="font-size:11px;color:var(--paper-dim);">Check back Monday for a new EGM. Showing the most recent case below.</div>
+        </div>
+      </div>` : ''}
       <div class="case-meta">
         <span class="eyebrow">Case · ${isPreviewing ? 'draft preview' : c.id === pickTodaysCase()?.id ? "today's read" : 'archived'}</span>
         <div style="display:flex; align-items:center; gap:10px;">
@@ -1315,6 +1331,22 @@
     el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
     el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
     el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
+    el.querySelector('#dayOffBtn').addEventListener('click', ()=>{
+      const today = todayStr();
+      const current = localStorage.getItem('egm:dayoff');
+      if(current === today){
+        localStorage.removeItem('egm:dayoff');
+        toast('Day off notice removed');
+      } else {
+        localStorage.setItem('egm:dayoff', today);
+        toast('Day off notice posted for today');
+      }
+      renderPost();
+      renderToday();
+    });
+    const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
+    el.querySelector('#dayOffBtn').textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
+    if(dayOffToday){ el.querySelector('#dayOffBtn').style.color='var(--amber)'; el.querySelector('#dayOffBtn').style.borderColor='var(--amber)'; }
     el.querySelector('#importFile').addEventListener('change', (e)=>{
       importBackupFile(e.target.files[0], ()=>renderPost());
     });
@@ -1683,6 +1715,22 @@
         el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
         el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
         el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
+    el.querySelector('#dayOffBtn').addEventListener('click', ()=>{
+      const today = todayStr();
+      const current = localStorage.getItem('egm:dayoff');
+      if(current === today){
+        localStorage.removeItem('egm:dayoff');
+        toast('Day off notice removed');
+      } else {
+        localStorage.setItem('egm:dayoff', today);
+        toast('Day off notice posted for today');
+      }
+      renderPost();
+      renderToday();
+    });
+    const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
+    el.querySelector('#dayOffBtn').textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
+    if(dayOffToday){ el.querySelector('#dayOffBtn').style.color='var(--amber)'; el.querySelector('#dayOffBtn').style.borderColor='var(--amber)'; }
         el.querySelector('#importFile').addEventListener('change', (e)=>{
           importBackupFile(e.target.files[0], ()=>renderPost());
         });
@@ -1707,6 +1755,22 @@
       el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
       el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
       el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
+    el.querySelector('#dayOffBtn').addEventListener('click', ()=>{
+      const today = todayStr();
+      const current = localStorage.getItem('egm:dayoff');
+      if(current === today){
+        localStorage.removeItem('egm:dayoff');
+        toast('Day off notice removed');
+      } else {
+        localStorage.setItem('egm:dayoff', today);
+        toast('Day off notice posted for today');
+      }
+      renderPost();
+      renderToday();
+    });
+    const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
+    el.querySelector('#dayOffBtn').textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
+    if(dayOffToday){ el.querySelector('#dayOffBtn').style.color='var(--amber)'; el.querySelector('#dayOffBtn').style.borderColor='var(--amber)'; }
       el.querySelector('#importFile').addEventListener('change', (e)=>{
         importBackupFile(e.target.files[0], ()=>renderEditPicker());
       });
@@ -2713,5 +2777,4 @@
 </script>
 </body>
 </html>
- 
  
