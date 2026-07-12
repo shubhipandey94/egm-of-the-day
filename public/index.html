@@ -1331,22 +1331,25 @@
     el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
     el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
     el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
-    el.querySelector('#dayOffBtn').addEventListener('click', ()=>{
-      const today = todayStr();
-      const current = localStorage.getItem('egm:dayoff');
-      if(current === today){
-        localStorage.removeItem('egm:dayoff');
-        toast('Day off notice removed');
-      } else {
-        localStorage.setItem('egm:dayoff', today);
-        toast('Day off notice posted for today');
-      }
-      renderPost();
-      renderToday();
-    });
-    const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
-    el.querySelector('#dayOffBtn').textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
-    if(dayOffToday){ el.querySelector('#dayOffBtn').style.color='var(--amber)'; el.querySelector('#dayOffBtn').style.borderColor='var(--amber)'; }
+    const dayOffBtn = el.querySelector('#dayOffBtn');
+    if(dayOffBtn){
+      const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
+      dayOffBtn.textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
+      if(dayOffToday){ dayOffBtn.style.color='var(--amber)'; dayOffBtn.style.borderColor='var(--amber)'; }
+      dayOffBtn.addEventListener('click', ()=>{
+        const today = todayStr();
+        const current = localStorage.getItem('egm:dayoff');
+        if(current === today){
+          localStorage.removeItem('egm:dayoff');
+          toast('Day off notice removed');
+        } else {
+          localStorage.setItem('egm:dayoff', today);
+          toast('Day off notice posted for today');
+        }
+        renderPost();
+        renderToday();
+      });
+    }
     el.querySelector('#importFile').addEventListener('change', (e)=>{
       importBackupFile(e.target.files[0], ()=>renderPost());
     });
@@ -1715,22 +1718,25 @@
         el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
         el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
         el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
-    el.querySelector('#dayOffBtn').addEventListener('click', ()=>{
-      const today = todayStr();
-      const current = localStorage.getItem('egm:dayoff');
-      if(current === today){
-        localStorage.removeItem('egm:dayoff');
-        toast('Day off notice removed');
-      } else {
-        localStorage.setItem('egm:dayoff', today);
-        toast('Day off notice posted for today');
-      }
-      renderPost();
-      renderToday();
-    });
-    const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
-    el.querySelector('#dayOffBtn').textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
-    if(dayOffToday){ el.querySelector('#dayOffBtn').style.color='var(--amber)'; el.querySelector('#dayOffBtn').style.borderColor='var(--amber)'; }
+    const dayOffBtn = el.querySelector('#dayOffBtn');
+    if(dayOffBtn){
+      const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
+      dayOffBtn.textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
+      if(dayOffToday){ dayOffBtn.style.color='var(--amber)'; dayOffBtn.style.borderColor='var(--amber)'; }
+      dayOffBtn.addEventListener('click', ()=>{
+        const today = todayStr();
+        const current = localStorage.getItem('egm:dayoff');
+        if(current === today){
+          localStorage.removeItem('egm:dayoff');
+          toast('Day off notice removed');
+        } else {
+          localStorage.setItem('egm:dayoff', today);
+          toast('Day off notice posted for today');
+        }
+        renderPost();
+        renderToday();
+      });
+    }
         el.querySelector('#importFile').addEventListener('change', (e)=>{
           importBackupFile(e.target.files[0], ()=>renderPost());
         });
@@ -1755,22 +1761,25 @@
       el.querySelector('#subNew').addEventListener('click', ()=>{ el.dataset.subMode='new'; renderPost(); });
       el.querySelector('#subEdit').addEventListener('click', ()=>{ el.dataset.subMode='edit'; renderPost(); });
       el.querySelector('#backupBtn').addEventListener('click', downloadBackup);
-    el.querySelector('#dayOffBtn').addEventListener('click', ()=>{
-      const today = todayStr();
-      const current = localStorage.getItem('egm:dayoff');
-      if(current === today){
-        localStorage.removeItem('egm:dayoff');
-        toast('Day off notice removed');
-      } else {
-        localStorage.setItem('egm:dayoff', today);
-        toast('Day off notice posted for today');
-      }
-      renderPost();
-      renderToday();
-    });
-    const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
-    el.querySelector('#dayOffBtn').textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
-    if(dayOffToday){ el.querySelector('#dayOffBtn').style.color='var(--amber)'; el.querySelector('#dayOffBtn').style.borderColor='var(--amber)'; }
+    const dayOffBtn = el.querySelector('#dayOffBtn');
+    if(dayOffBtn){
+      const dayOffToday = localStorage.getItem('egm:dayoff') === todayStr();
+      dayOffBtn.textContent = dayOffToday ? 'Remove day off notice ×' : 'Post day off notice';
+      if(dayOffToday){ dayOffBtn.style.color='var(--amber)'; dayOffBtn.style.borderColor='var(--amber)'; }
+      dayOffBtn.addEventListener('click', ()=>{
+        const today = todayStr();
+        const current = localStorage.getItem('egm:dayoff');
+        if(current === today){
+          localStorage.removeItem('egm:dayoff');
+          toast('Day off notice removed');
+        } else {
+          localStorage.setItem('egm:dayoff', today);
+          toast('Day off notice posted for today');
+        }
+        renderPost();
+        renderToday();
+      });
+    }
       el.querySelector('#importFile').addEventListener('change', (e)=>{
         importBackupFile(e.target.files[0], ()=>renderEditPicker());
       });
@@ -2777,4 +2786,5 @@
 </script>
 </body>
 </html>
+ 
  
