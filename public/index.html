@@ -106,6 +106,8 @@
   .guess-opt.correct{border-color:var(--teal); background:rgba(79,182,168,0.08);}
   .guess-opt.correct .letter{border-color:var(--teal); color:var(--teal);}
   .guess-opt.incorrect{border-color:var(--red); background:rgba(217,104,95,0.07); opacity:0.75;}
+  .guess-opt.missed{border-color:var(--red); border-style:dashed; opacity:0.75;}
+  .guess-opt.missed .letter{border-color:var(--red); color:var(--red);}
   .guess-opt.incorrect .letter{border-color:var(--red); color:var(--red);}
   .guess-opt.pending{border-color:var(--amber); background:rgba(232,162,61,0.08);}
   .guess-opt.pending .letter{border-color:var(--amber); color:var(--amber);}
@@ -698,8 +700,9 @@
       return;
     }
     currentCaseId = c.id;
+    const isSata = c.questionType === 'sata';
     const hasOptions = c.options && c.options.length > 0;
-    const answered = c._answeredOption !== undefined;
+    const answered = isSata ? (c._selectedOptions !== undefined) : (c._answeredOption !== undefined);
     const revealed = !!c._revealed;
     const available = interpAvailable(c);
  
@@ -714,29 +717,63 @@
     if(hasOptions){
       const votes = c.votes || {};
       const totalVotes = Object.values(votes).reduce((a,b)=>a+b, 0);
-      const pending = c._pendingOption;
-      optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
-        let cls = 'guess-opt';
-        if(answered && (revealed || available)){
-          if(o.correct) cls += ' correct';
-          else if(i === c._answeredOption) cls += ' incorrect';
-        } else if(!answered && pending === i){
-          cls += ' pending';
-        } else if(answered && !revealed && !available && i === c._answeredOption){
-          cls += ' pending'; // keep submitted choice highlighted until reveal
+ 
+      if(isSata){
+        // Select all that apply rendering
+        const selected = new Set(c._selectedOptions || []);
+        const pending = new Set(c._pendingSata || []);
+        optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
+          let cls = 'guess-opt';
+          const isSelected = selected.has(i);
+          const isPending = pending.has(i);
+          if(answered && (revealed || available)){
+            if(o.correct && isSelected) cls += ' correct';
+            else if(!o.correct && isSelected) cls += ' incorrect';
+            else if(o.correct && !isSelected) cls += ' missed';
+          } else if(!answered && isPending){
+            cls += ' pending';
+          } else if(answered && !revealed && !available && isSelected){
+            cls += ' pending';
+          }
+          const showStats = revealed && answered && totalVotes > 0;
+          const voteCount = votes[i] || 0;
+          const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+          return `<button class="${cls}" data-idx="${i}" ${answered?'disabled':''} style="position:relative;overflow:hidden;">
+            ${showStats ? `<span style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:${o.correct?'rgba(79,182,168,0.15)':'rgba(255,255,255,0.04)'};transition:width .6s ease;"></span>` : ''}
+            <span class="letter" style="position:relative;">${String.fromCharCode(65+i)}</span>
+            <span style="position:relative;flex:1;">${escapeHtml(o.label)}</span>
+            ${showStats ? `<span style="position:relative;font-size:11px;color:${o.correct?'var(--teal)':'var(--paper-dim)'};margin-left:8px;flex-shrink:0;">${pct}%</span>` : ''}
+          </button>`;
+        }).join('') + `</div>`;
+        if(!answered){
+          optionsHtml += `<button id="submitAnswer" class="publish-btn" style="width:100%;margin-bottom:16px;" ${pending.size===0?'disabled':''}>Submit answer</button>`;
         }
-        const voteCount = votes[i] || 0;
-        const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
-        const showStats = revealed && answered && totalVotes > 0;
-        return `<button class="${cls}" data-idx="${i}" ${answered?'disabled':''} style="position:relative; overflow:hidden;">
-          ${showStats ? `<span style="position:absolute; left:0; top:0; bottom:0; width:${pct}%; background:${o.correct ? 'rgba(79,182,168,0.15)' : 'rgba(255,255,255,0.04)'}; transition:width .6s ease;"></span>` : ''}
-          <span class="letter" style="position:relative;">${String.fromCharCode(65+i)}</span>
-          <span style="position:relative; flex:1;">${escapeHtml(o.label)}</span>
-          ${showStats ? `<span style="position:relative; font-size:11px; color:${o.correct ? 'var(--teal)' : 'var(--paper-dim)'}; margin-left:8px; flex-shrink:0;">${pct}%</span>` : ''}
-        </button>`;
-      }).join('') + `</div>`;
-      if(!answered && pending !== undefined){
-        optionsHtml += `<button id="submitAnswer" class="publish-btn" style="width:100%; margin-bottom:16px;">Submit answer</button>`;
+      } else {
+        // Single MC rendering
+        const pending = c._pendingOption;
+        optionsHtml = `<div class="guess-grid" id="optGrid">` + c.options.map((o,i)=>{
+          let cls = 'guess-opt';
+          if(answered && (revealed || available)){
+            if(o.correct) cls += ' correct';
+            else if(i === c._answeredOption) cls += ' incorrect';
+          } else if(!answered && pending === i){
+            cls += ' pending';
+          } else if(answered && !revealed && !available && i === c._answeredOption){
+            cls += ' pending';
+          }
+          const voteCount = votes[i] || 0;
+          const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+          const showStats = revealed && answered && totalVotes > 0;
+          return `<button class="${cls}" data-idx="${i}" ${answered?'disabled':''} style="position:relative; overflow:hidden;">
+            ${showStats ? `<span style="position:absolute; left:0; top:0; bottom:0; width:${pct}%; background:${o.correct ? 'rgba(79,182,168,0.15)' : 'rgba(255,255,255,0.04)'}; transition:width .6s ease;"></span>` : ''}
+            <span class="letter" style="position:relative;">${String.fromCharCode(65+i)}</span>
+            <span style="position:relative; flex:1;">${escapeHtml(o.label)}</span>
+            ${showStats ? `<span style="position:relative; font-size:11px; color:${o.correct ? 'var(--teal)' : 'var(--paper-dim)'}; margin-left:8px; flex-shrink:0;">${pct}%</span>` : ''}
+          </button>`;
+        }).join('') + `</div>`;
+        if(!answered && pending !== undefined){
+          optionsHtml += `<button id="submitAnswer" class="publish-btn" style="width:100%; margin-bottom:16px;">Submit answer</button>`;
+        }
       }
       if(answered && totalVotes > 0 && revealed){
         optionsHtml += `<div style="font-size:11px; color:var(--paper-dim); margin:-10px 0 16px; text-align:right;">${totalVotes} response${totalVotes===1?'':'s'}</div>`;
@@ -751,7 +788,8 @@
  
     let revealBtnHtml;
     const freeTextAnswered = !hasOptions && !!c._freeGuess;
-    if((!hasOptions && !freeTextAnswered) || (hasOptions && !answered)){
+    const sataPending = isSata && c._pendingSata && c._pendingSata.length>0;
+    if((!hasOptions && !freeTextAnswered) || (hasOptions && !answered) || (isSata && sataPending && !answered)){
       revealBtnHtml = ''; // hidden until answer submitted
     } else if(available){
         revealBtnHtml = `<button id="revealBtn" class="reveal-toggle ${revealed?'open':''}">
@@ -861,32 +899,60 @@
     if(hasOptions){
       el.querySelectorAll('.guess-opt').forEach(btn=>{
         btn.addEventListener('click', ()=>{
-          if(c._answeredOption !== undefined) return;
-          c._pendingOption = parseInt(btn.dataset.idx);
-          if(!isPreviewing) setDeviceState(c.id,'pendingOption', c._pendingOption);
-          renderToday();
+          if(isSata){
+            if(c._selectedOptions !== undefined) return;
+            const idx = parseInt(btn.dataset.idx);
+            c._pendingSata = c._pendingSata || [];
+            const pos = c._pendingSata.indexOf(idx);
+            if(pos>=0) c._pendingSata.splice(pos,1); else c._pendingSata.push(idx);
+            if(!isPreviewing) setDeviceState(c.id,'pendingSata', c._pendingSata);
+            renderToday();
+          } else {
+            if(c._answeredOption !== undefined) return;
+            c._pendingOption = parseInt(btn.dataset.idx);
+            if(!isPreviewing) setDeviceState(c.id,'pendingOption', c._pendingOption);
+            renderToday();
+          }
         });
       });
       const submitBtn = el.querySelector('#submitAnswer');
       if(submitBtn){
         submitBtn.addEventListener('click', async ()=>{
-          if(c._answeredOption !== undefined || c._pendingOption === undefined) return;
-          const idx = c._pendingOption;
-          c._answeredOption = idx;
-          delete c._pendingOption;
-          if(!isPreviewing){
-            setDeviceState(c.id,'answeredOption', idx);
-            setDeviceState(c.id,'pendingOption', null);
-          }
-          if(!isPreviewing){
-            // only record real votes outside preview mode
-            c.votes = c.votes || {};
-            c.votes[idx] = (c.votes[idx] || 0) + 1;
-            if(interpAvailable(c)){ c._revealed = true; setDeviceState(c.id,'revealed',true); }
-            recordAnswered(c.id);
-            await saveCases();
+          if(isSata){
+            if(c._selectedOptions !== undefined) return;
+            const selected = c._pendingSata || [];
+            if(selected.length===0){ toast('Select at least one option'); return; }
+            c._selectedOptions = selected;
+            delete c._pendingSata;
+            if(!isPreviewing){
+              setDeviceState(c.id,'selectedOptions', selected);
+              setDeviceState(c.id,'pendingSata', null);
+              c.votes = c.votes || {};
+              selected.forEach(idx=>{ c.votes[idx] = (c.votes[idx]||0)+1; });
+              if(interpAvailable(c)){ c._revealed=true; setDeviceState(c.id,'revealed',true); }
+              recordAnswered(c.id);
+              await saveCases();
+            } else {
+              if(interpAvailable(c)) c._revealed=true;
+            }
           } else {
-            if(interpAvailable(c)) c._revealed = true;
+            if(c._answeredOption !== undefined || c._pendingOption === undefined) return;
+            const idx = c._pendingOption;
+            c._answeredOption = idx;
+            delete c._pendingOption;
+            if(!isPreviewing){
+              setDeviceState(c.id,'answeredOption', idx);
+              setDeviceState(c.id,'pendingOption', null);
+            }
+            if(!isPreviewing){
+              c.votes = c.votes || {};
+              c.votes[idx] = (c.votes[idx] || 0) + 1;
+              if(interpAvailable(c)){ c._revealed = true; setDeviceState(c.id,'revealed',true); }
+              recordAnswered(c.id);
+              await saveCases();
+            } else {
+              if(interpAvailable(c)) c._revealed = true;
+            }
           }
           renderToday();
         });
@@ -1298,7 +1364,16 @@
         <textarea id="pTitle" placeholder="e.g. What's the mechanism of this wide-complex tachycardia?"></textarea>
       </div>
       <div class="form-block">
-        <label>Answer choices (mark the correct one) — leave blank for free-text response instead</label>
+        <label>Question type</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <button class="add-opt" id="qtMC" style="flex:1;">Multiple choice (1 correct)</button>
+          <button class="add-opt" id="qtSATA" style="flex:1;">Select all that apply</button>
+          <button class="add-opt" id="qtFree" style="flex:1;">Free text</button>
+        </div>
+        <div id="qtHint" style="font-size:11px;color:var(--paper-dim);"></div>
+      </div>
+      <div class="form-block" id="optionsBlock">
+        <label id="optionsLabel">Answer choices (mark the correct one) — leave blank for free-text response instead</label>
         <div id="optsWrap"></div>
         <button class="add-opt" id="addOpt">+ Add choice</button>
       </div>
@@ -1356,13 +1431,53 @@
     wireLinksUI(el.querySelector('#pLinksFormBlock'));
  
     let optCount = 0;
+    // Question type state
+    let questionType = 'mc'; // 'mc' | 'sata' | 'free'
+    function updateQType(type){
+      questionType = type;
+      const block = el.querySelector('#optionsBlock');
+      const hint = el.querySelector('#qtHint');
+      const lbl = el.querySelector('#optionsLabel');
+      const addBtn = el.querySelector('#addOpt');
+      ['qtMC','qtSATA','qtFree'].forEach(id=>{
+        const b = el.querySelector('#'+id);
+        if(b){ b.style.borderColor=''; b.style.color=''; }
+      });
+      if(type==='free'){
+        block.style.display='none';
+        hint.textContent='Viewers type their own answer.';
+        el.querySelector('#qtFree').style.borderColor='var(--amber)';el.querySelector('#qtFree').style.color='var(--amber)';
+      } else if(type==='sata'){
+        block.style.display='block';
+        lbl.textContent='Answer choices (check all correct ones)';
+        hint.textContent='Viewers select all choices that apply.';
+        el.querySelector('#qtSATA').style.borderColor='var(--amber)';el.querySelector('#qtSATA').style.color='var(--amber)';
+        // re-render existing opts as checkboxes
+        el.querySelector('#optsWrap').innerHTML='';
+        addOptRow();addOptRow();
+      } else {
+        block.style.display='block';
+        lbl.textContent='Answer choices (mark the correct one) — leave blank for free-text response instead';
+        hint.textContent='';
+        el.querySelector('#qtMC').style.borderColor='var(--amber)';el.querySelector('#qtMC').style.color='var(--amber)';
+        el.querySelector('#optsWrap').innerHTML='';
+        addOptRow();addOptRow();
+      }
+    }
+    el.querySelector('#qtMC').addEventListener('click',()=>updateQType('mc'));
+    el.querySelector('#qtSATA').addEventListener('click',()=>updateQType('sata'));
+    el.querySelector('#qtFree').addEventListener('click',()=>updateQType('free'));
+    // Default highlight
+    updateQType('mc');
+ 
     function addOptRow(label='', correct=false){
       const wrap = el.querySelector('#optsWrap');
       const row = document.createElement('div');
       row.className='opt-row';
       const idx = optCount++;
+      const isSata = questionType==='sata';
       row.innerHTML = `
-        <input type="radio" name="correctOpt" ${correct?'checked':''} value="${idx}">
+        <input type="${isSata?'checkbox':'radio'}" name="${isSata?'correctOptSata':'correctOpt'}" ${correct?'checked':''} value="${idx}">
         <input type="text" placeholder="Choice ${String.fromCharCode(65+idx)}" value="${escapeHtml(label)}">
       `;
       wrap.appendChild(row);
@@ -1396,16 +1511,21 @@
       const title = el.querySelector('#pTitle').value.trim();
       if(!title){ toast('Add a quiz prompt first'); return null; }
       const optionRows = [...el.querySelectorAll('.opt-row')];
-      const correctIdx = el.querySelector('input[name=correctOpt]:checked')?.value;
       let options = [];
-      optionRows.forEach((row,i)=>{
-        const text = row.querySelector('input[type=text]').value.trim();
-        if(text){
-          options.push({label:text, correct: correctIdx!==undefined && parseInt(correctIdx)===i});
-        }
-      });
-      if(options.length>0 && !options.some(o=>o.correct)){
-        toast('Mark which choice is correct'); return null;
+      if(questionType==='sata'){
+        const checked = new Set([...el.querySelectorAll('input[name=correctOptSata]:checked')].map(i=>parseInt(i.value)));
+        optionRows.forEach((row,i)=>{
+          const text = row.querySelector('input[type=text]').value.trim();
+          if(text) options.push({label:text, correct:checked.has(i)});
+        });
+        if(options.length>0 && !options.some(o=>o.correct)){ toast('Check at least one correct choice'); return null; }
+      } else {
+        const correctIdx = el.querySelector('input[name=correctOpt]:checked')?.value;
+        optionRows.forEach((row,i)=>{
+          const text = row.querySelector('input[type=text]').value.trim();
+          if(text) options.push({label:text, correct: correctIdx!==undefined && parseInt(correctIdx)===i});
+        });
+        if(options.length>0 && !options.some(o=>o.correct)){ toast('Mark which choice is correct'); return null; }
       }
       return {
         id: uid(),
@@ -1414,6 +1534,7 @@
         images: imageData,
         scale: pScaleVal||null,
         caption: el.querySelector('#pCaption').value.trim(),
+        questionType: options.length>0 ? questionType : 'free',
         options,
         interpDate: el.querySelector('#pInterpDate').value,
         interp:{
@@ -1752,8 +1873,9 @@
                 <div class="d">${fmtDate(c.date)}${c.status==='draft' ? ' · <span style="color:var(--amber)">draft</span>' : ''}${!interpAvailable(c) && isLive(c) ? ' · interpretation pending' : ''}</div>
               </div>
             </div>
-            <div style="display:flex; gap:8px; width:100%;">
+            <div style="display:flex; gap:8px; width:100%; flex-wrap:wrap;">
               <button class="add-opt edit-interp-btn" data-id="${c.id}" style="flex:1;">Edit interpretation</button>
+              ${isLive(c) ? `<button class="add-opt view-results-btn" data-id="${c.id}" style="flex:1;color:var(--teal);border-color:var(--teal);">View results</button>` : ''}
               ${isLive(c) ? `<button class="add-opt unpublish-btn" data-id="${c.id}" style="flex:1; color:var(--red); border-color:var(--red);">Unpublish</button>` : ''}
             </div>
           </div>
@@ -1787,6 +1909,13 @@
         btn.addEventListener('click', ()=>{
           el.dataset.editId = btn.dataset.id;
           renderEditForm();
+        });
+      });
+      el.querySelectorAll('.view-results-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const c = cases.find(x=>x.id===btn.dataset.id);
+          if(!c) return;
+          showResultsModal(c);
         });
       });
       el.querySelectorAll('.unpublish-btn').forEach(btn=>{
@@ -1965,14 +2094,59 @@
       const pend = getDeviceState(c.id,'pendingOption');
       const rev = getDeviceState(c.id,'revealed');
       const guess = getDeviceState(c.id,'freeGuess');
+      const selOpts = getDeviceState(c.id,'selectedOptions');
+      const pendSata = getDeviceState(c.id,'pendingSata');
       if(ans !== null) c._answeredOption = ans;
       if(pend !== null) c._pendingOption = pend;
       if(rev) c._revealed = true;
       if(guess) c._freeGuess = guess;
+      if(selOpts) c._selectedOptions = selOpts;
+      if(pendSata) c._pendingSata = pendSata;
     });
   }
  
   function getImages(c){ return c.images&&c.images.length?c.images:(c.image?[c.image]:[]); }
+ 
+  function showResultsModal(c){
+    const votes = c.votes || {};
+    const totalVotes = Object.values(votes).reduce((a,b)=>a+b,0);
+    const isSata = c.questionType === 'sata';
+    const overlay = document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+ 
+    let body = '';
+    if(c.options && c.options.length){
+      body = c.options.map((o,i)=>{
+        const v = votes[i]||0;
+        const pct = totalVotes>0?Math.round(v/totalVotes*100):0;
+        const col = o.correct?'var(--teal)':'var(--paper-dim)';
+        return `<div style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:${col};">${String.fromCharCode(65+i)}. ${escapeHtml(o.label)}${o.correct?' ✓':''}</span>
+            <span style="font-size:12px;color:${col};font-weight:700;">${pct}% (${v})</span>
+          </div>
+          <div style="height:6px;background:#2a3544;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${o.correct?'var(--teal)':'#4a5566'};border-radius:3px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+      body += `<div style="font-size:11px;color:var(--paper-dim);margin-top:8px;text-align:right;">${totalVotes} total response${totalVotes===1?'':'s'}</div>`;
+    } else {
+      // Free text — show submitted guesses if any stored
+      body = '<div style="font-size:12px;color:var(--paper-dim);">Free-text question — individual responses not stored.<br>'+totalVotes+' response'+(totalVotes===1?'':'s')+' recorded.</div>';
+    }
+ 
+    overlay.innerHTML = `<div style="background:#10161f;border:1px solid #2a3544;border-radius:12px;padding:20px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 style="font-size:13px;color:var(--paper);margin:0;line-height:1.4;">${escapeHtml(c.title)}</h3>
+        <button id="closeResults" style="background:transparent;border:none;color:#9aa3b0;cursor:pointer;font-size:18px;padding:0 0 0 12px;">✕</button>
+      </div>
+      ${body}
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#closeResults').onclick=()=>document.body.removeChild(overlay);
+    overlay.addEventListener('click',e=>{if(e.target===overlay)document.body.removeChild(overlay);});
+  }
  
   function showGoLiveModal(caseObj, onConfirm){
     const today = todayStr();
@@ -2786,5 +2960,4 @@
 </script>
 </body>
 </html>
- 
  
