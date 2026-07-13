@@ -549,6 +549,23 @@
           const toSave = Object.fromEntries(
             Object.entries(cas).filter(([k])=>!k.startsWith('_'))
           );
+          // Merge votes from DB to avoid overwriting votes added by other users
+          try{
+            const existing = await window.storage.get('egm:case:' + cas.id, SHARED);
+            if(existing && existing.value){
+              const existingCase = JSON.parse(existing.value);
+              if(existingCase.votes){
+                // Merge: take the max vote count per option to avoid losing votes
+                const merged = {...(existingCase.votes)};
+                if(toSave.votes){
+                  Object.entries(toSave.votes).forEach(([k,v])=>{
+                    merged[k] = Math.max(merged[k]||0, v);
+                  });
+                }
+                toSave.votes = merged;
+              }
+            }
+          }catch(e){}
           // Strip redundant imgSrc from annotationSteps (if matches case primary image)
           if(toSave.annotationSteps && toSave.images && toSave.images[0]){
             const primarySrc = toSave.images[0];
