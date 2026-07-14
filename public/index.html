@@ -1750,13 +1750,15 @@
  
       // populate existing options
       let dOptCount = 0;
+      let dQuestionType = c.questionType || 'mc';
       function addDOptRow(label='', correct=false){
         const wrap = ds.querySelector('#dOptsWrap');
         const row = document.createElement('div');
         row.className = 'opt-row';
         const idx = dOptCount++;
+        const isSataType = dQuestionType==='sata';
         row.innerHTML = `
-          <input type="radio" name="dCorrectOpt" ${correct?'checked':''} value="${idx}">
+          <input type="${isSataType?'checkbox':'radio'}" name="${isSataType?'dCorrectOptSata':'dCorrectOpt'}" ${correct?'checked':''} value="${idx}">
           <input type="text" placeholder="Choice ${String.fromCharCode(65+idx)}" value="${escapeHtml(label)}">
         `;
         wrap.appendChild(row);
@@ -1795,16 +1797,26 @@
         const title = ds.querySelector('#dTitle').value.trim();
         if(!title){ toast('Add a quiz prompt first'); return null; }
         const optionRows = [...ds.querySelectorAll('.opt-row')];
-        const correctIdx = ds.querySelector('input[name=dCorrectOpt]:checked')?.value;
         let options = [];
-        optionRows.forEach((row,idx)=>{
-          const text = row.querySelector('input[type=text]').value.trim();
-          if(text) options.push({label:text, correct: correctIdx!==undefined && parseInt(correctIdx)===idx});
-        });
-        if(options.length>0 && !options.some(o=>o.correct)){ toast('Mark which choice is correct'); return null; }
+        if(dQuestionType==='sata'){
+          optionRows.forEach(row=>{
+            const text = row.querySelector('input[type=text]').value.trim();
+            const chk = row.querySelector('input[type=checkbox]');
+            if(text) options.push({label:text, correct:!!(chk&&chk.checked)});
+          });
+          if(options.length>0 && !options.some(o=>o.correct)){ toast('Check at least one correct choice'); return null; }
+        } else {
+          const correctIdx = ds.querySelector('input[name=dCorrectOpt]:checked')?.value;
+          optionRows.forEach((row,idx)=>{
+            const text = row.querySelector('input[type=text]').value.trim();
+            if(text) options.push({label:text, correct: correctIdx!==undefined && parseInt(correctIdx)===idx});
+          });
+          if(options.length>0 && !options.some(o=>o.correct)){ toast('Mark which choice is correct'); return null; }
+        }
         return {
           date: ds.querySelector('#dDate').value,
           title,
+          questionType: options.length>0 ? dQuestionType : 'free',
           images: dImageData,
           scale: dScaleVal||null,
           liveDate: ds.querySelector('#dLiveDate').value||null,
@@ -2978,3 +2990,4 @@
 </script>
 </body>
 </html>
+ 
