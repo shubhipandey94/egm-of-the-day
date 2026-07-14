@@ -1469,15 +1469,14 @@
         lbl.textContent='Answer choices (check all correct ones)';
         hint.textContent='Viewers select all choices that apply.';
         el.querySelector('#qtSATA').style.borderColor='var(--amber)';el.querySelector('#qtSATA').style.color='var(--amber)';
-        // re-render existing opts as checkboxes
-        el.querySelector('#optsWrap').innerHTML='';
+        el.querySelector('#optsWrap').innerHTML='';optCount=0;
         addOptRow();addOptRow();
       } else {
         block.style.display='block';
         lbl.textContent='Answer choices (mark the correct one) — leave blank for free-text response instead';
         hint.textContent='';
         el.querySelector('#qtMC').style.borderColor='var(--amber)';el.querySelector('#qtMC').style.color='var(--amber)';
-        el.querySelector('#optsWrap').innerHTML='';
+        el.querySelector('#optsWrap').innerHTML='';optCount=0;
         addOptRow();addOptRow();
       }
     }
@@ -1530,10 +1529,12 @@
       const optionRows = [...el.querySelectorAll('.opt-row')];
       let options = [];
       if(questionType==='sata'){
-        const checked = new Set([...el.querySelectorAll('input[name=correctOptSata]:checked')].map(i=>parseInt(i.value)));
-        optionRows.forEach((row,i)=>{
+        // Use the checkbox's data attribute (not value which may be stale optCount)
+        // Mark which checkboxes are checked by their position in the row
+        optionRows.forEach((row)=>{
           const text = row.querySelector('input[type=text]').value.trim();
-          if(text) options.push({label:text, correct:checked.has(i)});
+          const chk = row.querySelector('input[type=checkbox]');
+          if(text) options.push({label:text, correct:!!(chk&&chk.checked)});
         });
         if(options.length>0 && !options.some(o=>o.correct)){ toast('Check at least one correct choice'); return null; }
       } else {
@@ -2977,4 +2978,3 @@
 </script>
 </body>
 </html>
- 
